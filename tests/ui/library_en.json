@@ -1,0 +1,3032 @@
+{
+ "categories": [
+  {
+   "id": "io",
+   "title": "Home Assistant"
+  },
+  {
+   "id": "logic",
+   "title": "Logic"
+  },
+  {
+   "id": "compare",
+   "title": "Compare"
+  },
+  {
+   "id": "math",
+   "title": "Math"
+  },
+  {
+   "id": "time",
+   "title": "Time"
+  },
+  {
+   "id": "control",
+   "title": "Control"
+  },
+  {
+   "id": "bus",
+   "title": "KNX / Modbus"
+  },
+  {
+   "id": "misc",
+   "title": "Other"
+  },
+  {
+   "id": "macro",
+   "title": "Macros"
+  },
+  {
+   "id": "macro_io",
+   "title": "Macro pins"
+  }
+ ],
+ "blocks": [
+  {
+   "type": "entity_in",
+   "category": "io",
+   "title": "Read entity",
+   "symbol": "IN",
+   "description": "Reads the state (or an attribute) of an HA entity.",
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "value",
+     "type": "num",
+     "default": null,
+     "label": "value"
+    },
+    {
+     "name": "on",
+     "type": "bool",
+     "default": null,
+     "label": "on"
+    },
+    {
+     "name": "text",
+     "type": "str",
+     "default": null,
+     "label": "text"
+    },
+    {
+     "name": "valid",
+     "type": "bool",
+     "default": null,
+     "label": "valid"
+    }
+   ],
+   "params": [
+    {
+     "name": "entity_id",
+     "type": "entity",
+     "default": "",
+     "label": "Entity"
+    },
+    {
+     "name": "attribute",
+     "type": "text",
+     "default": "",
+     "label": "Attribute (optional)"
+    },
+    {
+     "name": "on_invalid",
+     "type": "select",
+     "default": "hold",
+     "label": "When unavailable",
+     "options": [
+      {
+       "value": "hold",
+       "label": "Hold last value"
+      },
+      {
+       "value": "fallback",
+       "label": "Use fallback value"
+      }
+     ]
+    },
+    {
+     "name": "fallback",
+     "type": "number",
+     "default": 0,
+     "label": "Fallback value",
+     "show_if": {
+      "param": "on_invalid",
+      "in": [
+       "fallback"
+      ]
+     }
+    }
+   ],
+   "dynamic": null,
+   "ha": "entity_in",
+   "width": 150
+  },
+  {
+   "type": "entity_out",
+   "category": "io",
+   "title": "Write entity",
+   "symbol": "OUT",
+   "description": "Writes the value to an HA entity with the matching service. Writes only when the value changes (with optional deadband and minimum interval).",
+   "inputs": [
+    {
+     "name": "value",
+     "type": "any",
+     "default": 0,
+     "label": "value"
+    },
+    {
+     "name": "en",
+     "type": "bool",
+     "default": true,
+     "label": "enable"
+    }
+   ],
+   "outputs": [],
+   "params": [
+    {
+     "name": "entity_id",
+     "type": "entity",
+     "default": "",
+     "label": "Entity"
+    },
+    {
+     "name": "action",
+     "type": "select",
+     "default": "auto",
+     "label": "Action",
+     "options": [
+      {
+       "value": "auto",
+       "label": "Automatic (by domain)"
+      },
+      {
+       "value": "on_off",
+       "label": "On/off"
+      },
+      {
+       "value": "value",
+       "label": "Set value"
+      },
+      {
+       "value": "brightness",
+       "label": "Brightness %"
+      },
+      {
+       "value": "position",
+       "label": "Position %"
+      },
+      {
+       "value": "temperature",
+       "label": "Temperature"
+      },
+      {
+       "value": "option",
+       "label": "Select option"
+      },
+      {
+       "value": "press",
+       "label": "Press (on rising edge)"
+      },
+      {
+       "value": "custom",
+       "label": "Custom service"
+      }
+     ]
+    },
+    {
+     "name": "service",
+     "type": "text",
+     "default": "",
+     "label": "Service",
+     "help": "e.g. light.turn_on",
+     "show_if": {
+      "param": "action",
+      "in": [
+       "custom"
+      ]
+     }
+    },
+    {
+     "name": "data_key",
+     "type": "text",
+     "default": "",
+     "label": "Data field for the value",
+     "help": "e.g. brightness (empty = no value is sent)",
+     "show_if": {
+      "param": "action",
+      "in": [
+       "custom"
+      ]
+     }
+    },
+    {
+     "name": "deadband",
+     "type": "number",
+     "default": 0,
+     "label": "Deadband",
+     "min": 0
+    },
+    {
+     "name": "min_interval",
+     "type": "number",
+     "default": 0,
+     "label": "Minimum interval (s)",
+     "min": 0
+    },
+    {
+     "name": "write_on_start",
+     "type": "bool",
+     "default": true,
+     "label": "Write on start"
+    }
+   ],
+   "dynamic": null,
+   "ha": "entity_out",
+   "width": 150
+  },
+  {
+   "type": "setpoint",
+   "category": "io",
+   "title": "Setpoint (HA)",
+   "symbol": "SP",
+   "description": "Creates a number entity in HA that can be adjusted from a dashboard, and outputs its value in the program.",
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "value",
+     "type": "num",
+     "default": null,
+     "label": "value"
+    }
+   ],
+   "params": [
+    {
+     "name": "name",
+     "type": "text",
+     "default": "Setpoint",
+     "label": "Name"
+    },
+    {
+     "name": "initial",
+     "type": "number",
+     "default": 21,
+     "label": "Initial value"
+    },
+    {
+     "name": "min",
+     "type": "number",
+     "default": 0,
+     "label": "Min"
+    },
+    {
+     "name": "max",
+     "type": "number",
+     "default": 100,
+     "label": "Max"
+    },
+    {
+     "name": "step",
+     "type": "number",
+     "default": 0.5,
+     "label": "Step"
+    },
+    {
+     "name": "unit",
+     "type": "text",
+     "default": "",
+     "label": "Unit"
+    },
+    {
+     "name": "mode",
+     "type": "select",
+     "default": "box",
+     "label": "Display",
+     "options": [
+      {
+       "value": "box",
+       "label": "Box"
+      },
+      {
+       "value": "slider",
+       "label": "Slider"
+      },
+      {
+       "value": "auto",
+       "label": "Auto"
+      }
+     ]
+    }
+   ],
+   "dynamic": null,
+   "ha": "setpoint",
+   "width": 140
+  },
+  {
+   "type": "toggle",
+   "category": "io",
+   "title": "Switch (HA)",
+   "symbol": "SW",
+   "description": "Creates a switch entity in HA (e.g. a manual override) and outputs its state.",
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    }
+   ],
+   "params": [
+    {
+     "name": "name",
+     "type": "text",
+     "default": "Switch",
+     "label": "Name"
+    },
+    {
+     "name": "initial",
+     "type": "bool",
+     "default": false,
+     "label": "Initial value"
+    }
+   ],
+   "dynamic": null,
+   "ha": "toggle",
+   "width": 140
+  },
+  {
+   "type": "publish",
+   "category": "io",
+   "title": "Publish value",
+   "symbol": "PUB",
+   "description": "Makes an internal signal available as a sensor/binary_sensor in HA (for dashboards, history and automations).",
+   "inputs": [
+    {
+     "name": "value",
+     "type": "any",
+     "default": 0,
+     "label": "value"
+    }
+   ],
+   "outputs": [],
+   "params": [
+    {
+     "name": "name",
+     "type": "text",
+     "default": "Signal",
+     "label": "Name"
+    },
+    {
+     "name": "kind",
+     "type": "select",
+     "default": "auto",
+     "label": "Type",
+     "options": [
+      {
+       "value": "auto",
+       "label": "Automatic"
+      },
+      {
+       "value": "num",
+       "label": "Number (sensor)"
+      },
+      {
+       "value": "bool",
+       "label": "On/off (binary_sensor)"
+      },
+      {
+       "value": "text",
+       "label": "Text (sensor)"
+      }
+     ]
+    },
+    {
+     "name": "unit",
+     "type": "text",
+     "default": "",
+     "label": "Unit"
+    },
+    {
+     "name": "device_class",
+     "type": "text",
+     "default": "",
+     "label": "Device class (optional)",
+     "suggest": [
+      {
+       "value": "temperature",
+       "label": "Temperature (number)"
+      },
+      {
+       "value": "temperature_delta",
+       "label": "Temperature difference (number)"
+      },
+      {
+       "value": "humidity",
+       "label": "Relative humidity (number)"
+      },
+      {
+       "value": "carbon_dioxide",
+       "label": "CO₂ (number)"
+      },
+      {
+       "value": "volatile_organic_compounds_parts",
+       "label": "VOC (tall)"
+      },
+      {
+       "value": "pm25",
+       "label": "Particulate matter PM2.5 (number)"
+      },
+      {
+       "value": "pressure",
+       "label": "Pressure (number)"
+      },
+      {
+       "value": "volume_flow_rate",
+       "label": "Volume flow rate (number)"
+      },
+      {
+       "value": "power",
+       "label": "Power (number)"
+      },
+      {
+       "value": "energy",
+       "label": "Energy (number)"
+      },
+      {
+       "value": "voltage",
+       "label": "Voltage (number)"
+      },
+      {
+       "value": "current",
+       "label": "Current (number)"
+      },
+      {
+       "value": "power_factor",
+       "label": "Power factor (number)"
+      },
+      {
+       "value": "frequency",
+       "label": "Frequency (number)"
+      },
+      {
+       "value": "illuminance",
+       "label": "Illuminance (number)"
+      },
+      {
+       "value": "wind_speed",
+       "label": "Wind speed (number)"
+      },
+      {
+       "value": "duration",
+       "label": "Duration (number)"
+      },
+      {
+       "value": "battery",
+       "label": "Battery (number or on/off)"
+      },
+      {
+       "value": "running",
+       "label": "Running (on/off)"
+      },
+      {
+       "value": "problem",
+       "label": "Problem/alarm (on/off)"
+      },
+      {
+       "value": "heat",
+       "label": "Heat (on/off)"
+      },
+      {
+       "value": "cold",
+       "label": "Cold (on/off)"
+      },
+      {
+       "value": "door",
+       "label": "Door (on/off)"
+      },
+      {
+       "value": "window",
+       "label": "Window (on/off)"
+      },
+      {
+       "value": "opening",
+       "label": "Opening (on/off)"
+      },
+      {
+       "value": "motion",
+       "label": "Motion (on/off)"
+      },
+      {
+       "value": "occupancy",
+       "label": "Occupancy (on/off)"
+      },
+      {
+       "value": "moisture",
+       "label": "Moisture/leak (on/off)"
+      },
+      {
+       "value": "smoke",
+       "label": "Smoke (on/off)"
+      }
+     ],
+     "help": "The HA name in lower case, e.g. temperature. Pick from the list or type it."
+    },
+    {
+     "name": "decimals",
+     "type": "number",
+     "default": 2,
+     "label": "Decimals",
+     "min": 0,
+     "max": 6,
+     "step": 1
+    },
+    {
+     "name": "deadband",
+     "type": "number",
+     "default": 0,
+     "label": "Deadband",
+     "min": 0,
+     "help": "Numbers are sent to HA only when they have changed at least this much. 0 = every change."
+    },
+    {
+     "name": "min_interval",
+     "type": "number",
+     "default": 0,
+     "label": "Minimum interval (s)",
+     "min": 0,
+     "help": "At most one new value this often. The latest value always gets through."
+    }
+   ],
+   "dynamic": null,
+   "ha": "publish",
+   "width": 140
+  },
+  {
+   "type": "const_num",
+   "category": "misc",
+   "title": "Constant (number)",
+   "symbol": "K",
+   "description": "Fixed number.",
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "out",
+     "type": "num",
+     "default": null,
+     "label": "out"
+    }
+   ],
+   "params": [
+    {
+     "name": "value",
+     "type": "number",
+     "default": 0,
+     "label": "Value"
+    }
+   ],
+   "dynamic": null,
+   "ha": null,
+   "width": 100
+  },
+  {
+   "type": "const_bool",
+   "category": "misc",
+   "title": "Constant (on/off)",
+   "symbol": "K",
+   "description": "Fixed on/off value.",
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    }
+   ],
+   "params": [
+    {
+     "name": "value",
+     "type": "bool",
+     "default": true,
+     "label": "Value"
+    }
+   ],
+   "dynamic": null,
+   "ha": null,
+   "width": 100
+  },
+  {
+   "type": "comment",
+   "category": "misc",
+   "title": "Comment",
+   "symbol": "",
+   "description": "Free text on the drawing. Does not affect the logic.",
+   "inputs": [],
+   "outputs": [],
+   "params": [
+    {
+     "name": "text",
+     "type": "textarea",
+     "default": "Comment",
+     "label": "Text"
+    }
+   ],
+   "dynamic": null,
+   "ha": null,
+   "width": 180
+  },
+  {
+   "type": "and",
+   "category": "logic",
+   "title": "AND",
+   "symbol": "&",
+   "description": "The output is on when all inputs are on.",
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    }
+   ],
+   "params": [
+    {
+     "name": "n",
+     "type": "number",
+     "default": 2,
+     "label": "Number of inputs",
+     "min": 2,
+     "max": 8,
+     "step": 1
+    }
+   ],
+   "dynamic": {
+    "param": "n",
+    "prefix": "in",
+    "type": "bool",
+    "default": true,
+    "count": 2,
+    "min": 2,
+    "max": 8
+   },
+   "ha": null,
+   "width": 90
+  },
+  {
+   "type": "or",
+   "category": "logic",
+   "title": "OR",
+   "symbol": "≥1",
+   "description": "The output is on when at least one input is on.",
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    }
+   ],
+   "params": [
+    {
+     "name": "n",
+     "type": "number",
+     "default": 2,
+     "label": "Number of inputs",
+     "min": 2,
+     "max": 8,
+     "step": 1
+    }
+   ],
+   "dynamic": {
+    "param": "n",
+    "prefix": "in",
+    "type": "bool",
+    "default": false,
+    "count": 2,
+    "min": 2,
+    "max": 8
+   },
+   "ha": null,
+   "width": 90
+  },
+  {
+   "type": "xor",
+   "category": "logic",
+   "title": "XOR",
+   "symbol": "=1",
+   "description": "The output is on when an odd number of inputs are on.",
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    }
+   ],
+   "params": [
+    {
+     "name": "n",
+     "type": "number",
+     "default": 2,
+     "label": "Number of inputs",
+     "min": 2,
+     "max": 8,
+     "step": 1
+    }
+   ],
+   "dynamic": {
+    "param": "n",
+    "prefix": "in",
+    "type": "bool",
+    "default": false,
+    "count": 2,
+    "min": 2,
+    "max": 8
+   },
+   "ha": null,
+   "width": 90
+  },
+  {
+   "type": "not",
+   "category": "logic",
+   "title": "NOT",
+   "symbol": "1o",
+   "description": "Inverts the input.",
+   "inputs": [
+    {
+     "name": "in",
+     "type": "bool",
+     "default": false,
+     "label": "in"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 90
+  },
+  {
+   "type": "sr",
+   "category": "logic",
+   "title": "SR latch (set dominant)",
+   "symbol": "SR",
+   "description": "Set/reset latch. Set wins when both are on. Kept over a restart.",
+   "inputs": [
+    {
+     "name": "s",
+     "type": "bool",
+     "default": false,
+     "label": "s"
+    },
+    {
+     "name": "r",
+     "type": "bool",
+     "default": false,
+     "label": "r"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 100
+  },
+  {
+   "type": "rs",
+   "category": "logic",
+   "title": "RS latch (reset dominant)",
+   "symbol": "RS",
+   "description": "Set/reset latch. Reset wins when both are on. Kept over a restart.",
+   "inputs": [
+    {
+     "name": "s",
+     "type": "bool",
+     "default": false,
+     "label": "s"
+    },
+    {
+     "name": "r",
+     "type": "bool",
+     "default": false,
+     "label": "r"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 100
+  },
+  {
+   "type": "r_trig",
+   "category": "logic",
+   "title": "Rising edge",
+   "symbol": "R_TRIG",
+   "description": "Gives one pulse (one scan) when the input goes from off to on.",
+   "inputs": [
+    {
+     "name": "in",
+     "type": "bool",
+     "default": false,
+     "label": "in"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 100
+  },
+  {
+   "type": "f_trig",
+   "category": "logic",
+   "title": "Falling edge",
+   "symbol": "F_TRIG",
+   "description": "Gives one pulse (one scan) when the input goes from on to off.",
+   "inputs": [
+    {
+     "name": "in",
+     "type": "bool",
+     "default": false,
+     "label": "in"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 100
+  },
+  {
+   "type": "toggle_ff",
+   "category": "logic",
+   "title": "Toggle (impulse relay)",
+   "symbol": "T",
+   "description": "Every rising edge on the input toggles the output. Kept over a restart.",
+   "inputs": [
+    {
+     "name": "in",
+     "type": "bool",
+     "default": false,
+     "label": "in"
+    },
+    {
+     "name": "r",
+     "type": "bool",
+     "default": false,
+     "label": "r"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 100
+  },
+  {
+   "type": "gt",
+   "category": "compare",
+   "title": "Greater than",
+   "symbol": ">",
+   "description": "The output is on when A > B.",
+   "inputs": [
+    {
+     "name": "a",
+     "type": "num",
+     "default": 0,
+     "label": "A"
+    },
+    {
+     "name": "b",
+     "type": "num",
+     "default": 0,
+     "label": "B"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 90
+  },
+  {
+   "type": "ge",
+   "category": "compare",
+   "title": "Greater or equal",
+   "symbol": "≥",
+   "description": "The output is on when A ≥ B.",
+   "inputs": [
+    {
+     "name": "a",
+     "type": "num",
+     "default": 0,
+     "label": "A"
+    },
+    {
+     "name": "b",
+     "type": "num",
+     "default": 0,
+     "label": "B"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 90
+  },
+  {
+   "type": "lt",
+   "category": "compare",
+   "title": "Less than",
+   "symbol": "<",
+   "description": "The output is on when A < B.",
+   "inputs": [
+    {
+     "name": "a",
+     "type": "num",
+     "default": 0,
+     "label": "A"
+    },
+    {
+     "name": "b",
+     "type": "num",
+     "default": 0,
+     "label": "B"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 90
+  },
+  {
+   "type": "le",
+   "category": "compare",
+   "title": "Less or equal",
+   "symbol": "≤",
+   "description": "The output is on when A ≤ B.",
+   "inputs": [
+    {
+     "name": "a",
+     "type": "num",
+     "default": 0,
+     "label": "A"
+    },
+    {
+     "name": "b",
+     "type": "num",
+     "default": 0,
+     "label": "B"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 90
+  },
+  {
+   "type": "eq",
+   "category": "compare",
+   "title": "Equal",
+   "symbol": "=",
+   "description": "The output is on when A = B.",
+   "inputs": [
+    {
+     "name": "a",
+     "type": "num",
+     "default": 0,
+     "label": "A"
+    },
+    {
+     "name": "b",
+     "type": "num",
+     "default": 0,
+     "label": "B"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 90
+  },
+  {
+   "type": "ne",
+   "category": "compare",
+   "title": "Not equal",
+   "symbol": "≠",
+   "description": "The output is on when A ≠ B.",
+   "inputs": [
+    {
+     "name": "a",
+     "type": "num",
+     "default": 0,
+     "label": "A"
+    },
+    {
+     "name": "b",
+     "type": "num",
+     "default": 0,
+     "label": "B"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 90
+  },
+  {
+   "type": "hyst",
+   "category": "compare",
+   "title": "Hysteresis",
+   "symbol": "HYST",
+   "description": "On when input ≥ high, off when input ≤ low, otherwise unchanged.",
+   "inputs": [
+    {
+     "name": "in",
+     "type": "num",
+     "default": 0,
+     "label": "in"
+    },
+    {
+     "name": "high",
+     "type": "num",
+     "default": 22,
+     "label": "high"
+    },
+    {
+     "name": "low",
+     "type": "num",
+     "default": 20,
+     "label": "low"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 100
+  },
+  {
+   "type": "in_range",
+   "category": "compare",
+   "title": "In range",
+   "symbol": "LO≤x≤HI",
+   "description": "On when low ≤ input ≤ high.",
+   "inputs": [
+    {
+     "name": "in",
+     "type": "num",
+     "default": 0,
+     "label": "in"
+    },
+    {
+     "name": "low",
+     "type": "num",
+     "default": 0,
+     "label": "low"
+    },
+    {
+     "name": "high",
+     "type": "num",
+     "default": 100,
+     "label": "high"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 110
+  },
+  {
+   "type": "sel",
+   "category": "compare",
+   "title": "Select (SEL)",
+   "symbol": "SEL",
+   "description": "Outputs in1 when g is on, otherwise in0.",
+   "inputs": [
+    {
+     "name": "g",
+     "type": "bool",
+     "default": false,
+     "label": "g"
+    },
+    {
+     "name": "in0",
+     "type": "any",
+     "default": 0.0,
+     "label": "in0"
+    },
+    {
+     "name": "in1",
+     "type": "any",
+     "default": 0.0,
+     "label": "in1"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "out",
+     "type": "any",
+     "default": null,
+     "label": "out"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 100
+  },
+  {
+   "type": "text_eq",
+   "category": "compare",
+   "title": "Text equals",
+   "symbol": "TXT=",
+   "description": "On when the text equals the given value (e.g. hvac mode 'heat').",
+   "inputs": [
+    {
+     "name": "in",
+     "type": "str",
+     "default": "",
+     "label": "in"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    }
+   ],
+   "params": [
+    {
+     "name": "text",
+     "type": "text",
+     "default": "",
+     "label": "Text"
+    },
+    {
+     "name": "ignore_case",
+     "type": "bool",
+     "default": true,
+     "label": "Ignore case"
+    }
+   ],
+   "dynamic": null,
+   "ha": null,
+   "width": 110
+  },
+  {
+   "type": "add",
+   "category": "math",
+   "title": "Add",
+   "symbol": "+",
+   "description": "Sums the inputs.",
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "out",
+     "type": "num",
+     "default": null,
+     "label": "out"
+    }
+   ],
+   "params": [
+    {
+     "name": "n",
+     "type": "number",
+     "default": 2,
+     "label": "Number of inputs",
+     "min": 2,
+     "max": 8,
+     "step": 1
+    }
+   ],
+   "dynamic": {
+    "param": "n",
+    "prefix": "in",
+    "type": "num",
+    "default": 0.0,
+    "count": 2,
+    "min": 2,
+    "max": 8
+   },
+   "ha": null,
+   "width": 90
+  },
+  {
+   "type": "sub",
+   "category": "math",
+   "title": "Subtract",
+   "symbol": "−",
+   "description": "out = A − B",
+   "inputs": [
+    {
+     "name": "a",
+     "type": "num",
+     "default": 0,
+     "label": "A"
+    },
+    {
+     "name": "b",
+     "type": "num",
+     "default": 0,
+     "label": "B"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "out",
+     "type": "num",
+     "default": null,
+     "label": "out"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 90
+  },
+  {
+   "type": "mul",
+   "category": "math",
+   "title": "Multiply",
+   "symbol": "×",
+   "description": "Multiplies the inputs.",
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "out",
+     "type": "num",
+     "default": null,
+     "label": "out"
+    }
+   ],
+   "params": [
+    {
+     "name": "n",
+     "type": "number",
+     "default": 2,
+     "label": "Number of inputs",
+     "min": 2,
+     "max": 8,
+     "step": 1
+    }
+   ],
+   "dynamic": {
+    "param": "n",
+    "prefix": "in",
+    "type": "num",
+    "default": 1.0,
+    "count": 2,
+    "min": 2,
+    "max": 8
+   },
+   "ha": null,
+   "width": 90
+  },
+  {
+   "type": "div",
+   "category": "math",
+   "title": "Divide",
+   "symbol": "÷",
+   "description": "out = A ÷ B. Division by zero gives out 0 and err on.",
+   "inputs": [
+    {
+     "name": "a",
+     "type": "num",
+     "default": 0,
+     "label": "A"
+    },
+    {
+     "name": "b",
+     "type": "num",
+     "default": 1,
+     "label": "B"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "out",
+     "type": "num",
+     "default": null,
+     "label": "out"
+    },
+    {
+     "name": "err",
+     "type": "bool",
+     "default": null,
+     "label": "err"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 90
+  },
+  {
+   "type": "min",
+   "category": "math",
+   "title": "Minimum",
+   "symbol": "MIN",
+   "description": "Lowest of the inputs.",
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "out",
+     "type": "num",
+     "default": null,
+     "label": "out"
+    }
+   ],
+   "params": [
+    {
+     "name": "n",
+     "type": "number",
+     "default": 2,
+     "label": "Number of inputs",
+     "min": 2,
+     "max": 8,
+     "step": 1
+    }
+   ],
+   "dynamic": {
+    "param": "n",
+    "prefix": "in",
+    "type": "num",
+    "default": 0.0,
+    "count": 2,
+    "min": 2,
+    "max": 8
+   },
+   "ha": null,
+   "width": 90
+  },
+  {
+   "type": "max",
+   "category": "math",
+   "title": "Maximum",
+   "symbol": "MAX",
+   "description": "Highest of the inputs.",
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "out",
+     "type": "num",
+     "default": null,
+     "label": "out"
+    }
+   ],
+   "params": [
+    {
+     "name": "n",
+     "type": "number",
+     "default": 2,
+     "label": "Number of inputs",
+     "min": 2,
+     "max": 8,
+     "step": 1
+    }
+   ],
+   "dynamic": {
+    "param": "n",
+    "prefix": "in",
+    "type": "num",
+    "default": 0.0,
+    "count": 2,
+    "min": 2,
+    "max": 8
+   },
+   "ha": null,
+   "width": 90
+  },
+  {
+   "type": "avg",
+   "category": "math",
+   "title": "Average",
+   "symbol": "AVG",
+   "description": "Average of the inputs.",
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "out",
+     "type": "num",
+     "default": null,
+     "label": "out"
+    }
+   ],
+   "params": [
+    {
+     "name": "n",
+     "type": "number",
+     "default": 2,
+     "label": "Number of inputs",
+     "min": 2,
+     "max": 8,
+     "step": 1
+    }
+   ],
+   "dynamic": {
+    "param": "n",
+    "prefix": "in",
+    "type": "num",
+    "default": 0.0,
+    "count": 2,
+    "min": 2,
+    "max": 8
+   },
+   "ha": null,
+   "width": 90
+  },
+  {
+   "type": "abs",
+   "category": "math",
+   "title": "Absolute value",
+   "symbol": "ABS",
+   "description": "out = |in|",
+   "inputs": [
+    {
+     "name": "in",
+     "type": "num",
+     "default": 0,
+     "label": "in"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "out",
+     "type": "num",
+     "default": null,
+     "label": "out"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 90
+  },
+  {
+   "type": "limit",
+   "category": "math",
+   "title": "Limit",
+   "symbol": "LIMIT",
+   "description": "Limits the input to [min, max].",
+   "inputs": [
+    {
+     "name": "in",
+     "type": "num",
+     "default": 0,
+     "label": "in"
+    },
+    {
+     "name": "min",
+     "type": "num",
+     "default": 0,
+     "label": "min"
+    },
+    {
+     "name": "max",
+     "type": "num",
+     "default": 100,
+     "label": "max"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "out",
+     "type": "num",
+     "default": null,
+     "label": "out"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 100
+  },
+  {
+   "type": "scale",
+   "category": "math",
+   "title": "Scale (linear)",
+   "symbol": "SCALE",
+   "description": "Linear scaling from [in low, in high] to [out low, out high].",
+   "inputs": [
+    {
+     "name": "in",
+     "type": "num",
+     "default": 0,
+     "label": "in"
+    },
+    {
+     "name": "in_lo",
+     "type": "num",
+     "default": 0,
+     "label": "in low"
+    },
+    {
+     "name": "in_hi",
+     "type": "num",
+     "default": 100,
+     "label": "in high"
+    },
+    {
+     "name": "out_lo",
+     "type": "num",
+     "default": 0,
+     "label": "out low"
+    },
+    {
+     "name": "out_hi",
+     "type": "num",
+     "default": 100,
+     "label": "out high"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "out",
+     "type": "num",
+     "default": null,
+     "label": "out"
+    }
+   ],
+   "params": [
+    {
+     "name": "clamp",
+     "type": "bool",
+     "default": true,
+     "label": "Limit to the output range"
+    }
+   ],
+   "dynamic": null,
+   "ha": null,
+   "width": 110
+  },
+  {
+   "type": "round",
+   "category": "math",
+   "title": "Round",
+   "symbol": "ROUND",
+   "description": "Rounds to the chosen number of decimals.",
+   "inputs": [
+    {
+     "name": "in",
+     "type": "num",
+     "default": 0,
+     "label": "in"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "out",
+     "type": "num",
+     "default": null,
+     "label": "out"
+    }
+   ],
+   "params": [
+    {
+     "name": "decimals",
+     "type": "number",
+     "default": 0,
+     "label": "Decimals",
+     "min": 0,
+     "max": 6,
+     "step": 1
+    }
+   ],
+   "dynamic": null,
+   "ha": null,
+   "width": 90
+  },
+  {
+   "type": "formula",
+   "category": "math",
+   "title": "Formula",
+   "symbol": "f(x)",
+   "description": "Free expression with inputs a…h, e.g. 'a*0.5 + b' or 'sel(a > 20, b, c)'. Functions: abs, min, max, round, sqrt, clamp, sel, floor, ceil, sin, cos, log, exp.",
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "out",
+     "type": "num",
+     "default": null,
+     "label": "out"
+    },
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    }
+   ],
+   "params": [
+    {
+     "name": "expr",
+     "type": "text",
+     "default": "a + b",
+     "label": "Expression"
+    },
+    {
+     "name": "n",
+     "type": "number",
+     "default": 2,
+     "label": "Number of inputs",
+     "min": 1,
+     "max": 8,
+     "step": 1
+    }
+   ],
+   "dynamic": {
+    "param": "n",
+    "names": [
+     "a",
+     "b",
+     "c",
+     "d",
+     "e",
+     "f",
+     "g",
+     "h"
+    ],
+    "type": "num",
+    "default": 0.0,
+    "count": 2,
+    "min": 1,
+    "max": 8
+   },
+   "ha": null,
+   "width": 130
+  },
+  {
+   "type": "ton",
+   "category": "time",
+   "title": "On delay",
+   "symbol": "TON",
+   "description": "The output goes on when the input has been on for 'time' seconds.",
+   "inputs": [
+    {
+     "name": "in",
+     "type": "bool",
+     "default": false,
+     "label": "in"
+    },
+    {
+     "name": "pt",
+     "type": "num",
+     "default": 5,
+     "label": "time s"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    },
+    {
+     "name": "et",
+     "type": "num",
+     "default": null,
+     "label": "elapsed s"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 100
+  },
+  {
+   "type": "tof",
+   "category": "time",
+   "title": "Off delay",
+   "symbol": "TOF",
+   "description": "The output goes off 'time' seconds after the input went off.",
+   "inputs": [
+    {
+     "name": "in",
+     "type": "bool",
+     "default": false,
+     "label": "in"
+    },
+    {
+     "name": "pt",
+     "type": "num",
+     "default": 5,
+     "label": "time s"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    },
+    {
+     "name": "et",
+     "type": "num",
+     "default": null,
+     "label": "elapsed s"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 100
+  },
+  {
+   "type": "tp",
+   "category": "time",
+   "title": "Pulse",
+   "symbol": "TP",
+   "description": "A rising edge gives a pulse of fixed length ('time' seconds).",
+   "inputs": [
+    {
+     "name": "in",
+     "type": "bool",
+     "default": false,
+     "label": "in"
+    },
+    {
+     "name": "pt",
+     "type": "num",
+     "default": 5,
+     "label": "time s"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    },
+    {
+     "name": "et",
+     "type": "num",
+     "default": null,
+     "label": "elapsed s"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 100
+  },
+  {
+   "type": "blink",
+   "category": "time",
+   "title": "Pulse generator",
+   "symbol": "BLINK",
+   "description": "Blinks with the chosen on and off time while enabled.",
+   "inputs": [
+    {
+     "name": "en",
+     "type": "bool",
+     "default": true,
+     "label": "enable"
+    },
+    {
+     "name": "t_on",
+     "type": "num",
+     "default": 1,
+     "label": "on s"
+    },
+    {
+     "name": "t_off",
+     "type": "num",
+     "default": 1,
+     "label": "off s"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 100
+  },
+  {
+   "type": "clock",
+   "category": "time",
+   "title": "Clock",
+   "symbol": "CLOCK",
+   "description": "Local time: hour, minute, minutes since midnight, weekday (1=Mon) and weekend.",
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "hour",
+     "type": "num",
+     "default": null,
+     "label": "hour"
+    },
+    {
+     "name": "minute",
+     "type": "num",
+     "default": null,
+     "label": "min"
+    },
+    {
+     "name": "daymin",
+     "type": "num",
+     "default": null,
+     "label": "daymin"
+    },
+    {
+     "name": "weekday",
+     "type": "num",
+     "default": null,
+     "label": "weekday"
+    },
+    {
+     "name": "weekend",
+     "type": "bool",
+     "default": null,
+     "label": "weekend"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 110
+  },
+  {
+   "type": "runtime",
+   "category": "time",
+   "title": "Run time",
+   "symbol": "RUNTIME",
+   "description": "Counts running hours while the input is on. Kept over a restart.",
+   "inputs": [
+    {
+     "name": "in",
+     "type": "bool",
+     "default": false,
+     "label": "in"
+    },
+    {
+     "name": "reset",
+     "type": "bool",
+     "default": false,
+     "label": "reset"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "hours",
+     "type": "num",
+     "default": null,
+     "label": "hours"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 110
+  },
+  {
+   "type": "counter",
+   "category": "time",
+   "title": "Counter",
+   "symbol": "CTU",
+   "description": "Counts rising edges. Kept over a restart.",
+   "inputs": [
+    {
+     "name": "cu",
+     "type": "bool",
+     "default": false,
+     "label": "cu"
+    },
+    {
+     "name": "reset",
+     "type": "bool",
+     "default": false,
+     "label": "reset"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "count",
+     "type": "num",
+     "default": null,
+     "label": "count"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 100
+  },
+  {
+   "type": "pid",
+   "category": "control",
+   "title": "PID controller",
+   "symbol": "PID",
+   "description": "General PID controller with anti-windup, for all kinds of processes (temperature, pressure, humidity, CO₂, level, light). Reverse: the output rises when PV is below SP (e.g. heating, humidifying). Direct: the output rises when PV is above SP (e.g. cooling, CO₂ to ventilation). Ti = integral time in seconds (0 = off), Td = derivative time in seconds (the derivative acts on PV and is filtered with Td/10). Enable off gives min out, manual gives the manual value out. The return to automatic is bumpless: the output continues where it was. The bias is added to the output (useful for P-only control or feedforward).",
+   "inputs": [
+    {
+     "name": "pv",
+     "type": "num",
+     "default": 0,
+     "label": "PV"
+    },
+    {
+     "name": "sp",
+     "type": "num",
+     "default": 21,
+     "label": "SP"
+    },
+    {
+     "name": "en",
+     "type": "bool",
+     "default": true,
+     "label": "enable"
+    },
+    {
+     "name": "man",
+     "type": "bool",
+     "default": false,
+     "label": "manual"
+    },
+    {
+     "name": "mv",
+     "type": "num",
+     "default": 0,
+     "label": "man. value"
+    },
+    {
+     "name": "kp",
+     "type": "num",
+     "default": 5,
+     "label": "Kp"
+    },
+    {
+     "name": "ti",
+     "type": "num",
+     "default": 120,
+     "label": "Ti s"
+    },
+    {
+     "name": "td",
+     "type": "num",
+     "default": 0,
+     "label": "Td s"
+    },
+    {
+     "name": "bias",
+     "type": "num",
+     "default": 0,
+     "label": "bias"
+    },
+    {
+     "name": "min",
+     "type": "num",
+     "default": 0,
+     "label": "min"
+    },
+    {
+     "name": "max",
+     "type": "num",
+     "default": 100,
+     "label": "max"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "out",
+     "type": "num",
+     "default": null,
+     "label": "out"
+    },
+    {
+     "name": "err",
+     "type": "num",
+     "default": null,
+     "label": "error"
+    },
+    {
+     "name": "auto",
+     "type": "bool",
+     "default": null,
+     "label": "auto"
+    }
+   ],
+   "params": [
+    {
+     "name": "direction",
+     "type": "select",
+     "default": "reverse",
+     "label": "Action",
+     "options": [
+      {
+       "value": "reverse",
+       "label": "Reverse: rises when PV < SP (e.g. heating)"
+      },
+      {
+       "value": "direct",
+       "label": "Direct: rises when PV > SP (e.g. cooling)"
+      }
+     ]
+    },
+    {
+     "name": "deadband",
+     "type": "number",
+     "default": 0,
+     "label": "Deadband",
+     "min": 0,
+     "help": "An error within ± the deadband counts as 0, so the output stays still near SP (saves damper and valve actuators). Same unit as PV. 0 = off."
+    }
+   ],
+   "dynamic": null,
+   "ha": null,
+   "width": 120
+  },
+  {
+   "type": "ramp",
+   "category": "control",
+   "title": "Ramp",
+   "symbol": "RAMP",
+   "description": "The output follows the input with at most 'rate' change per second.",
+   "inputs": [
+    {
+     "name": "in",
+     "type": "num",
+     "default": 0,
+     "label": "in"
+    },
+    {
+     "name": "rate",
+     "type": "num",
+     "default": 1,
+     "label": "rate/s"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "out",
+     "type": "num",
+     "default": null,
+     "label": "out"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 100
+  },
+  {
+   "type": "pt1",
+   "category": "control",
+   "title": "Low-pass filter",
+   "symbol": "PT1",
+   "description": "First-order filter with time constant tau (seconds).",
+   "inputs": [
+    {
+     "name": "in",
+     "type": "num",
+     "default": 0,
+     "label": "in"
+    },
+    {
+     "name": "tau",
+     "type": "num",
+     "default": 10,
+     "label": "tau s"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "out",
+     "type": "num",
+     "default": null,
+     "label": "out"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 100
+  },
+  {
+   "type": "mux",
+   "category": "compare",
+   "title": "Multiplexer (MUX)",
+   "symbol": "MUX",
+   "description": "Outputs the input that index k points to (in0, in1, …). An invalid index is limited to the nearest input and sets err.",
+   "inputs": [
+    {
+     "name": "k",
+     "type": "num",
+     "default": 0,
+     "label": "k"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "out",
+     "type": "any",
+     "default": null,
+     "label": "out"
+    },
+    {
+     "name": "err",
+     "type": "bool",
+     "default": null,
+     "label": "err"
+    }
+   ],
+   "params": [
+    {
+     "name": "n",
+     "type": "number",
+     "default": 3,
+     "label": "Number of inputs",
+     "min": 2,
+     "max": 16,
+     "step": 1
+    }
+   ],
+   "dynamic": {
+    "param": "n",
+    "prefix": "in",
+    "start": 0,
+    "after": true,
+    "type": "any",
+    "default": 0.0,
+    "count": 3,
+    "min": 2,
+    "max": 16
+   },
+   "ha": null,
+   "width": 100
+  },
+  {
+   "type": "prio",
+   "category": "compare",
+   "title": "Priority select",
+   "symbol": "PRIO",
+   "description": "Outputs the value of the first active priority (g1 highest), otherwise 'else'. Typical: manual > alarm > schedule > auto. idx = active priority (0 = none).",
+   "inputs": [
+    {
+     "name": "else",
+     "type": "any",
+     "default": 0.0,
+     "label": "else"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "out",
+     "type": "any",
+     "default": null,
+     "label": "out"
+    },
+    {
+     "name": "idx",
+     "type": "num",
+     "default": null,
+     "label": "idx"
+    }
+   ],
+   "params": [
+    {
+     "name": "n",
+     "type": "number",
+     "default": 3,
+     "label": "Number of priorities",
+     "min": 1,
+     "max": 8,
+     "step": 1
+    }
+   ],
+   "dynamic": {
+    "param": "n",
+    "pairs": [
+     [
+      "g",
+      "bool",
+      false
+     ],
+     [
+      "in",
+      "any",
+      0.0
+     ]
+    ],
+    "count": 3,
+    "min": 1,
+    "max": 8
+   },
+   "ha": null,
+   "width": 110
+  },
+  {
+   "type": "bit_get",
+   "category": "math",
+   "title": "Get bit",
+   "symbol": "BIT",
+   "description": "Gets one bit (0 = least significant) out of an integer, e.g. a Modbus status word.",
+   "inputs": [
+    {
+     "name": "in",
+     "type": "num",
+     "default": 0,
+     "label": "in"
+    },
+    {
+     "name": "bit",
+     "type": "num",
+     "default": 0,
+     "label": "bit"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 90
+  },
+  {
+   "type": "schedule",
+   "category": "time",
+   "title": "Weekly schedule",
+   "symbol": "UKE",
+   "description": "Time schedule with periods per weekday. q is on in the periods, value gives a value for on/off (e.g. 21/18 °C), next is minutes to the next change. A period whose off time is before its on time runs past midnight. enable = off turns q off (e.g. on a holiday).",
+   "inputs": [
+    {
+     "name": "en",
+     "type": "bool",
+     "default": true,
+     "label": "enable"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    },
+    {
+     "name": "value",
+     "type": "num",
+     "default": null,
+     "label": "value"
+    },
+    {
+     "name": "next",
+     "type": "num",
+     "default": null,
+     "label": "next min"
+    }
+   ],
+   "params": [
+    {
+     "name": "periods",
+     "type": "schedule",
+     "default": [
+      {
+       "days": [
+        1,
+        2,
+        3,
+        4,
+        5
+       ],
+       "on": "07:00",
+       "off": "16:00"
+      }
+     ],
+     "label": "Periods"
+    },
+    {
+     "name": "on_value",
+     "type": "number",
+     "default": 1,
+     "label": "Value in period"
+    },
+    {
+     "name": "off_value",
+     "type": "number",
+     "default": 0,
+     "label": "Value outside period"
+    }
+   ],
+   "dynamic": null,
+   "ha": null,
+   "width": 130
+  },
+  {
+   "type": "page_out",
+   "category": "misc",
+   "title": "Connector (sender)",
+   "symbol": "→",
+   "description": "Sends a signal under a name. Picked up by a “Connector (receiver)” with the same name, on the same page or another one.",
+   "inputs": [
+    {
+     "name": "value",
+     "type": "any",
+     "default": 0.0,
+     "label": "value"
+    }
+   ],
+   "outputs": [],
+   "params": [
+    {
+     "name": "name",
+     "type": "text",
+     "default": "signal1",
+     "label": "Name"
+    }
+   ],
+   "dynamic": null,
+   "ha": null,
+   "width": 120
+  },
+  {
+   "type": "page_in",
+   "category": "misc",
+   "title": "Connector (receiver)",
+   "symbol": "←",
+   "description": "Gets the signal from the connector (sender) with the same name.",
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "value",
+     "type": "any",
+     "default": null,
+     "label": "value"
+    }
+   ],
+   "params": [
+    {
+     "name": "name",
+     "type": "text",
+     "default": "signal1",
+     "label": "Name"
+    }
+   ],
+   "dynamic": null,
+   "ha": null,
+   "width": 120
+  },
+  {
+   "type": "macro_in",
+   "category": "macro_io",
+   "title": "Macro input",
+   "symbol": "IN▸",
+   "description": "An input on the macro block. The order on the block follows the height on the drawing.",
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "value",
+     "type": "any",
+     "default": null,
+     "label": "value"
+    }
+   ],
+   "params": [
+    {
+     "name": "name",
+     "type": "text",
+     "default": "in1",
+     "label": "Pin name"
+    },
+    {
+     "name": "type",
+     "type": "select",
+     "default": "num",
+     "label": "Type",
+     "options": [
+      {
+       "value": "num",
+       "label": "Number"
+      },
+      {
+       "value": "bool",
+       "label": "On/off"
+      },
+      {
+       "value": "str",
+       "label": "Text"
+      },
+      {
+       "value": "any",
+       "label": "Any"
+      }
+     ]
+    },
+    {
+     "name": "default",
+     "type": "text",
+     "default": "0",
+     "label": "Default value (when the pin is not connected)"
+    }
+   ],
+   "dynamic": null,
+   "ha": null,
+   "width": 120
+  },
+  {
+   "type": "macro_out",
+   "category": "macro_io",
+   "title": "Macro output",
+   "symbol": "▸OUT",
+   "description": "An output on the macro block. The order follows the height on the drawing.",
+   "inputs": [
+    {
+     "name": "value",
+     "type": "any",
+     "default": 0.0,
+     "label": "value"
+    }
+   ],
+   "outputs": [],
+   "params": [
+    {
+     "name": "name",
+     "type": "text",
+     "default": "out1",
+     "label": "Pin name"
+    },
+    {
+     "name": "type",
+     "type": "select",
+     "default": "num",
+     "label": "Type",
+     "options": [
+      {
+       "value": "num",
+       "label": "Number"
+      },
+      {
+       "value": "bool",
+       "label": "On/off"
+      },
+      {
+       "value": "str",
+       "label": "Text"
+      },
+      {
+       "value": "any",
+       "label": "Any"
+      }
+     ]
+    }
+   ],
+   "dynamic": null,
+   "ha": null,
+   "width": 120
+  },
+  {
+   "type": "knx_send",
+   "category": "bus",
+   "title": "KNX send",
+   "symbol": "KNX▸",
+   "description": "Sends the value to a KNX group address (knx.send) with the chosen DPT. Sends only on change, with deadband, minimum interval and optional cyclic sending.",
+   "inputs": [
+    {
+     "name": "value",
+     "type": "any",
+     "default": 0,
+     "label": "value"
+    },
+    {
+     "name": "en",
+     "type": "bool",
+     "default": true,
+     "label": "enable"
+    }
+   ],
+   "outputs": [],
+   "params": [
+    {
+     "name": "address",
+     "type": "text",
+     "default": "",
+     "label": "Group address",
+     "help": "e.g. 1/2/3"
+    },
+    {
+     "name": "dpt",
+     "type": "select",
+     "default": "1.001",
+     "label": "Data type (DPT)",
+     "options": [
+      {
+       "value": "1.001",
+       "label": "1.001 On/off"
+      },
+      {
+       "value": "1.008",
+       "label": "1.008 Up/down"
+      },
+      {
+       "value": "1.009",
+       "label": "1.009 Open/close"
+      },
+      {
+       "value": "5.001",
+       "label": "5.001 Percent 0–100 %"
+      },
+      {
+       "value": "5.010",
+       "label": "5.010 Integer 0–255"
+      },
+      {
+       "value": "7.001",
+       "label": "7.001 Integer 0–65535"
+      },
+      {
+       "value": "9.001",
+       "label": "9.001 Temperature °C"
+      },
+      {
+       "value": "9.004",
+       "label": "9.004 Lux"
+      },
+      {
+       "value": "9.007",
+       "label": "9.007 Humidity %"
+      },
+      {
+       "value": "9.008",
+       "label": "9.008 CO₂ ppm"
+      },
+      {
+       "value": "13.001",
+       "label": "13.001 Integer 32 bit"
+      },
+      {
+       "value": "14.056",
+       "label": "14.056 Power W (float)"
+      },
+      {
+       "value": "17.001",
+       "label": "17.001 Scene 0–63"
+      },
+      {
+       "value": "custom",
+       "label": "Other DPT…"
+      }
+     ]
+    },
+    {
+     "name": "dpt_custom",
+     "type": "text",
+     "default": "",
+     "label": "DPT / type",
+     "help": "e.g. 9.005 or percent",
+     "show_if": {
+      "param": "dpt",
+      "in": [
+       "custom"
+      ]
+     }
+    },
+    {
+     "name": "deadband",
+     "type": "number",
+     "default": 0,
+     "label": "Deadband",
+     "min": 0
+    },
+    {
+     "name": "min_interval",
+     "type": "number",
+     "default": 0,
+     "label": "Minimum interval (s)",
+     "min": 0
+    },
+    {
+     "name": "cyclic",
+     "type": "number",
+     "default": 0,
+     "label": "Send cyclically every (s, 0 = off)",
+     "min": 0
+    },
+    {
+     "name": "write_on_start",
+     "type": "bool",
+     "default": true,
+     "label": "Send on start"
+    }
+   ],
+   "dynamic": null,
+   "ha": null,
+   "width": 140
+  },
+  {
+   "type": "knx_read",
+   "category": "bus",
+   "title": "KNX listen",
+   "symbol": "▸KNX",
+   "description": "Listens for telegrams to a KNX group address (knx_event) and outputs the latest value. 'new' is a pulse when a telegram arrives. Can send a read request on start.",
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "value",
+     "type": "num",
+     "default": null,
+     "label": "value"
+    },
+    {
+     "name": "on",
+     "type": "bool",
+     "default": null,
+     "label": "on"
+    },
+    {
+     "name": "valid",
+     "type": "bool",
+     "default": null,
+     "label": "valid"
+    },
+    {
+     "name": "new",
+     "type": "bool",
+     "default": null,
+     "label": "new"
+    }
+   ],
+   "params": [
+    {
+     "name": "address",
+     "type": "text",
+     "default": "",
+     "label": "Group address",
+     "help": "e.g. 1/2/3"
+    },
+    {
+     "name": "dpt",
+     "type": "select",
+     "default": "1.001",
+     "label": "Data type (DPT)",
+     "options": [
+      {
+       "value": "1.001",
+       "label": "1.001 On/off"
+      },
+      {
+       "value": "1.008",
+       "label": "1.008 Up/down"
+      },
+      {
+       "value": "1.009",
+       "label": "1.009 Open/close"
+      },
+      {
+       "value": "5.001",
+       "label": "5.001 Percent 0–100 %"
+      },
+      {
+       "value": "5.010",
+       "label": "5.010 Integer 0–255"
+      },
+      {
+       "value": "7.001",
+       "label": "7.001 Integer 0–65535"
+      },
+      {
+       "value": "9.001",
+       "label": "9.001 Temperature °C"
+      },
+      {
+       "value": "9.004",
+       "label": "9.004 Lux"
+      },
+      {
+       "value": "9.007",
+       "label": "9.007 Humidity %"
+      },
+      {
+       "value": "9.008",
+       "label": "9.008 CO₂ ppm"
+      },
+      {
+       "value": "13.001",
+       "label": "13.001 Integer 32 bit"
+      },
+      {
+       "value": "14.056",
+       "label": "14.056 Power W (float)"
+      },
+      {
+       "value": "17.001",
+       "label": "17.001 Scene 0–63"
+      },
+      {
+       "value": "custom",
+       "label": "Other DPT…"
+      }
+     ]
+    },
+    {
+     "name": "dpt_custom",
+     "type": "text",
+     "default": "",
+     "label": "DPT / type",
+     "show_if": {
+      "param": "dpt",
+      "in": [
+       "custom"
+      ]
+     }
+    },
+    {
+     "name": "read_on_start",
+     "type": "bool",
+     "default": true,
+     "label": "Send a read request on start"
+    }
+   ],
+   "dynamic": null,
+   "ha": null,
+   "width": 140
+  },
+  {
+   "type": "modbus_write",
+   "category": "bus",
+   "title": "Modbus write",
+   "symbol": "MB▸",
+   "description": "Writes to a holding register or a coil through HA's Modbus integration (modbus.write_register / write_coil). Raw value = value × scale. Read Modbus values with “Read entity” on a Modbus sensor.",
+   "inputs": [
+    {
+     "name": "value",
+     "type": "any",
+     "default": 0,
+     "label": "value"
+    },
+    {
+     "name": "en",
+     "type": "bool",
+     "default": true,
+     "label": "enable"
+    }
+   ],
+   "outputs": [],
+   "params": [
+    {
+     "name": "hub",
+     "type": "text",
+     "default": "modbus_hub",
+     "label": "Hub (name in the modbus configuration)"
+    },
+    {
+     "name": "slave",
+     "type": "number",
+     "default": 1,
+     "label": "Device address (slave)",
+     "min": 0,
+     "max": 255,
+     "step": 1
+    },
+    {
+     "name": "address",
+     "type": "number",
+     "default": 0,
+     "label": "Register address",
+     "min": 0,
+     "max": 65535,
+     "step": 1
+    },
+    {
+     "name": "kind",
+     "type": "select",
+     "default": "register",
+     "label": "Type",
+     "options": [
+      {
+       "value": "register",
+       "label": "Holding register"
+      },
+      {
+       "value": "coil",
+       "label": "Coil"
+      }
+     ]
+    },
+    {
+     "name": "dtype",
+     "type": "select",
+     "default": "int16",
+     "label": "Data type",
+     "options": [
+      {
+       "value": "int16",
+       "label": "int16"
+      },
+      {
+       "value": "uint16",
+       "label": "uint16"
+      },
+      {
+       "value": "int32",
+       "label": "int32 (2 reg.)"
+      },
+      {
+       "value": "uint32",
+       "label": "uint32 (2 reg.)"
+      },
+      {
+       "value": "float32",
+       "label": "float32 (2 reg.)"
+      }
+     ],
+     "show_if": {
+      "param": "kind",
+      "in": [
+       "register"
+      ]
+     }
+    },
+    {
+     "name": "word_order",
+     "type": "select",
+     "default": "big",
+     "label": "Word order (32 bit)",
+     "options": [
+      {
+       "value": "big",
+       "label": "High first (big)"
+      },
+      {
+       "value": "little",
+       "label": "Low first (swap)"
+      }
+     ],
+     "show_if": {
+      "param": "kind",
+      "in": [
+       "register"
+      ]
+     }
+    },
+    {
+     "name": "scale",
+     "type": "number",
+     "default": 1,
+     "label": "Scale",
+     "show_if": {
+      "param": "kind",
+      "in": [
+       "register"
+      ]
+     }
+    },
+    {
+     "name": "deadband",
+     "type": "number",
+     "default": 0,
+     "label": "Deadband",
+     "min": 0
+    },
+    {
+     "name": "min_interval",
+     "type": "number",
+     "default": 0,
+     "label": "Minimum interval (s)",
+     "min": 0
+    },
+    {
+     "name": "cyclic",
+     "type": "number",
+     "default": 0,
+     "label": "Send cyclically every (s, 0 = off)",
+     "min": 0
+    },
+    {
+     "name": "write_on_start",
+     "type": "bool",
+     "default": true,
+     "label": "Send on start"
+    }
+   ],
+   "dynamic": null,
+   "ha": null,
+   "width": 140
+  }
+ ]
+}

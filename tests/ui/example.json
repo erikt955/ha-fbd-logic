@@ -1,0 +1,42 @@
+{
+  "id": "eksempel_rom",
+  "name": "Romregulering (eksempel)",
+  "enabled": true,
+  "interval": 1,
+  "description": "Eksempel: PID-regulering av VAV-spjeld med nattsenking og vindusstopp, pluss forsering ved høy temperatur.",
+  "nodes": [
+    {"id": "cmt", "type": "comment", "x": 20, "y": -90, "params": {"text": "Romregulering stue\nNattsenking 22–06, PID stoppes når vinduet er åpent.\nBytt entiteter til dine egne før du lagrer."}, "consts": {}, "label": ""},
+    {"id": "temp", "type": "entity_in", "x": 20, "y": 20, "params": {"entity_id": "sensor.romtemp", "attribute": "", "on_invalid": "hold", "fallback": 0}, "consts": {}, "label": "Romtemp"},
+    {"id": "vindu", "type": "entity_in", "x": 20, "y": 150, "params": {"entity_id": "binary_sensor.vindu", "attribute": "", "on_invalid": "fallback", "fallback": 0}, "consts": {}, "label": "Vindu"},
+    {"id": "klokke", "type": "clock", "x": 20, "y": 290, "params": {}, "consts": {}, "label": ""},
+    {"id": "sp", "type": "setpoint", "x": 20, "y": 440, "params": {"name": "Settpunkt komfort", "initial": 21, "min": 15, "max": 26, "step": 0.5, "unit": "°C", "mode": "box"}, "consts": {}, "label": ""},
+    {"id": "man", "type": "toggle", "x": 20, "y": 530, "params": {"name": "Manuell forsering", "initial": false}, "consts": {}, "label": ""},
+    {"id": "dag", "type": "in_range", "x": 240, "y": 290, "params": {}, "consts": {"low": 360, "high": 1320}, "label": "Dagtid"},
+    {"id": "sel", "type": "sel", "x": 400, "y": 380, "params": {}, "consts": {"in0": 18}, "label": "Aktivt SP"},
+    {"id": "ikkevindu", "type": "not", "x": 240, "y": 150, "params": {}, "consts": {}, "label": ""},
+    {"id": "pid", "type": "pid", "x": 560, "y": 60, "params": {"direction": "reverse"}, "consts": {"kp": 8, "ti": 180}, "label": "Romregulator"},
+    {"id": "spjeld", "type": "entity_out", "x": 780, "y": 60, "params": {"entity_id": "number.vav_spjeld", "action": "auto", "service": "", "data_key": "", "deadband": 2, "min_interval": 10, "write_on_start": true}, "consts": {}, "label": "VAV-spjeld"},
+    {"id": "avvik", "type": "publish", "x": 780, "y": 170, "params": {"name": "Romtemp avvik", "kind": "auto", "unit": "K", "device_class": "", "decimals": 1}, "consts": {}, "label": ""},
+    {"id": "hyst", "type": "hyst", "x": 400, "y": 520, "params": {}, "consts": {"high": 24, "low": 23}, "label": "Høy temp"},
+    {"id": "or", "type": "or", "x": 560, "y": 520, "params": {"n": 2}, "consts": {}, "label": ""},
+    {"id": "tof", "type": "tof", "x": 680, "y": 520, "params": {}, "consts": {"pt": 300}, "label": "Etterløp"},
+    {"id": "forsering", "type": "entity_out", "x": 820, "y": 520, "params": {"entity_id": "light.gang", "action": "auto", "service": "", "data_key": "", "deadband": 0, "min_interval": 0, "write_on_start": true}, "consts": {}, "label": "Forsering"}
+  ],
+  "links": [
+    {"id": "l1", "from": "temp", "from_port": "value", "to": "pid", "to_port": "pv"},
+    {"id": "l2", "from": "sel", "from_port": "out", "to": "pid", "to_port": "sp"},
+    {"id": "l3", "from": "vindu", "from_port": "on", "to": "ikkevindu", "to_port": "in"},
+    {"id": "l4", "from": "ikkevindu", "from_port": "q", "to": "pid", "to_port": "en"},
+    {"id": "l5", "from": "klokke", "from_port": "daymin", "to": "dag", "to_port": "in"},
+    {"id": "l6", "from": "dag", "from_port": "q", "to": "sel", "to_port": "g"},
+    {"id": "l7", "from": "sp", "from_port": "value", "to": "sel", "to_port": "in1"},
+    {"id": "l8", "from": "pid", "from_port": "out", "to": "spjeld", "to_port": "value"},
+    {"id": "l9", "from": "pid", "from_port": "err", "to": "avvik", "to_port": "value"},
+    {"id": "l10", "from": "temp", "from_port": "value", "to": "hyst", "to_port": "in"},
+    {"id": "l11", "from": "hyst", "from_port": "q", "to": "or", "to_port": "in1"},
+    {"id": "l12", "from": "man", "from_port": "q", "to": "or", "to_port": "in2"},
+    {"id": "l13", "from": "or", "from_port": "q", "to": "tof", "to_port": "in"},
+    {"id": "l14", "from": "tof", "from_port": "q", "to": "forsering", "to_port": "value"}
+  ],
+  "view": {}
+}

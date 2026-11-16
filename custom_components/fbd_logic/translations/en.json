@@ -1,0 +1,20 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "FBD Logic",
+        "description": "Adds the function block editor to the sidebar and starts the program runtime."
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "FBD Logic is already configured."
+    }
+  },
+  "entity": {
+    "switch": {
+      "program_running": {
+        "name": "Running"
+      }
+    }
+  }
+}

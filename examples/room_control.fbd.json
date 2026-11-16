@@ -1,0 +1,43 @@
+{
+  "id": "example_room",
+  "name": "Room control (example)",
+  "enabled": true,
+  "interval": 1,
+  "event_scan": true,
+  "description": "Example: PID control of a VAV damper with night setback and window stop, plus boost on high temperature.",
+  "nodes": [
+    {"id": "cmt", "type": "comment", "x": 20, "y": -130, "params": {"text": "Room control, living room\nNight setback 22–06, the PID stops while the window is open.\nReplace the entities with your own before you save."}, "consts": {}, "label": ""},
+    {"id": "temp", "type": "entity_in", "x": 20, "y": 20, "params": {"entity_id": "sensor.room_temperature", "attribute": "", "on_invalid": "hold", "fallback": 0}, "consts": {}, "label": "Room temp"},
+    {"id": "window", "type": "entity_in", "x": 20, "y": 150, "params": {"entity_id": "binary_sensor.window", "attribute": "", "on_invalid": "fallback", "fallback": 0}, "consts": {}, "label": "Window"},
+    {"id": "clock", "type": "clock", "x": 20, "y": 290, "params": {}, "consts": {}, "label": ""},
+    {"id": "sp", "type": "setpoint", "x": 20, "y": 440, "params": {"name": "Comfort setpoint", "initial": 21, "min": 15, "max": 26, "step": 0.5, "unit": "°C", "mode": "box"}, "consts": {}, "label": ""},
+    {"id": "man", "type": "toggle", "x": 20, "y": 530, "params": {"name": "Manual boost", "initial": false}, "consts": {}, "label": ""},
+    {"id": "day", "type": "in_range", "x": 240, "y": 290, "params": {}, "consts": {"low": 360, "high": 1320}, "label": "Daytime"},
+    {"id": "sel", "type": "sel", "x": 400, "y": 380, "params": {}, "consts": {"in0": 18}, "label": "Active SP"},
+    {"id": "notwindow", "type": "not", "x": 240, "y": 150, "params": {}, "consts": {}, "label": ""},
+    {"id": "pid", "type": "pid", "x": 560, "y": 60, "params": {"direction": "reverse", "deadband": 0.2}, "consts": {"kp": 8, "ti": 180}, "label": "Room controller"},
+    {"id": "damper", "type": "entity_out", "x": 780, "y": 60, "params": {"entity_id": "number.vav_damper", "action": "auto", "service": "", "data_key": "", "deadband": 2, "min_interval": 10, "write_on_start": true}, "consts": {}, "label": "VAV damper"},
+    {"id": "error", "type": "publish", "x": 780, "y": 170, "params": {"name": "Room temp error", "kind": "auto", "unit": "K", "device_class": "temperature_delta", "decimals": 1, "deadband": 0.1, "min_interval": 0}, "consts": {}, "label": ""},
+    {"id": "hyst", "type": "hyst", "x": 400, "y": 520, "params": {}, "consts": {"high": 24, "low": 23}, "label": "High temp"},
+    {"id": "or", "type": "or", "x": 560, "y": 520, "params": {"n": 2}, "consts": {}, "label": ""},
+    {"id": "tof", "type": "tof", "x": 680, "y": 520, "params": {}, "consts": {"pt": 300}, "label": "Run-on"},
+    {"id": "boost", "type": "entity_out", "x": 820, "y": 520, "params": {"entity_id": "fan.boost", "action": "auto", "service": "", "data_key": "", "deadband": 0, "min_interval": 0, "write_on_start": true}, "consts": {}, "label": "Boost"}
+  ],
+  "links": [
+    {"id": "l1", "from": "temp", "from_port": "value", "to": "pid", "to_port": "pv"},
+    {"id": "l2", "from": "sel", "from_port": "out", "to": "pid", "to_port": "sp"},
+    {"id": "l3", "from": "window", "from_port": "on", "to": "notwindow", "to_port": "in"},
+    {"id": "l4", "from": "notwindow", "from_port": "q", "to": "pid", "to_port": "en"},
+    {"id": "l5", "from": "clock", "from_port": "daymin", "to": "day", "to_port": "in"},
+    {"id": "l6", "from": "day", "from_port": "q", "to": "sel", "to_port": "g"},
+    {"id": "l7", "from": "sp", "from_port": "value", "to": "sel", "to_port": "in1"},
+    {"id": "l8", "from": "pid", "from_port": "out", "to": "damper", "to_port": "value"},
+    {"id": "l9", "from": "pid", "from_port": "err", "to": "error", "to_port": "value"},
+    {"id": "l10", "from": "temp", "from_port": "value", "to": "hyst", "to_port": "in"},
+    {"id": "l11", "from": "hyst", "from_port": "q", "to": "or", "to_port": "in1"},
+    {"id": "l12", "from": "man", "from_port": "q", "to": "or", "to_port": "in2"},
+    {"id": "l13", "from": "or", "from_port": "q", "to": "tof", "to_port": "in"},
+    {"id": "l14", "from": "tof", "from_port": "q", "to": "boost", "to_port": "value"}
+  ],
+  "view": {}
+}

@@ -1,0 +1,20 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "FBD Logic",
+        "description": "Legger til funksjonsblokk-editoren i sidemenyen og starter programmotoren."
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "FBD Logic er allerede satt opp."
+    }
+  },
+  "entity": {
+    "switch": {
+      "program_running": {
+        "name": "Kjører"
+      }
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "domain": "fbd_logic",
+  "name": "FBD Logic",
+  "codeowners": ["@erikt955"],
+  "config_flow": true,
+  "dependencies": ["frontend", "http", "panel_custom", "websocket_api"],
+  "documentation": "https://github.com/erikt955/ha-fbd-logic",
+  "integration_type": "service",
+  "iot_class": "calculated",
+  "issue_tracker": "https://github.com/erikt955/ha-fbd-logic/issues",
+  "requirements": [],
+  "single_config_entry": true,
+  "version": "0.4.0"
+}

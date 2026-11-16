@@ -1,0 +1,3032 @@
+{
+ "categories": [
+  {
+   "id": "io",
+   "title": "Home Assistant"
+  },
+  {
+   "id": "logic",
+   "title": "Logikk"
+  },
+  {
+   "id": "compare",
+   "title": "Sammenligning"
+  },
+  {
+   "id": "math",
+   "title": "Matematikk"
+  },
+  {
+   "id": "time",
+   "title": "Tid"
+  },
+  {
+   "id": "control",
+   "title": "Regulering"
+  },
+  {
+   "id": "bus",
+   "title": "KNX / Modbus"
+  },
+  {
+   "id": "misc",
+   "title": "Annet"
+  },
+  {
+   "id": "macro",
+   "title": "Makroer"
+  },
+  {
+   "id": "macro_io",
+   "title": "Makro-tilkoblinger"
+  }
+ ],
+ "blocks": [
+  {
+   "type": "entity_in",
+   "category": "io",
+   "title": "Les entitet",
+   "symbol": "IN",
+   "description": "Leser tilstanden (eller et attributt) til en HA-entitet.",
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "value",
+     "type": "num",
+     "default": null,
+     "label": "verdi"
+    },
+    {
+     "name": "on",
+     "type": "bool",
+     "default": null,
+     "label": "på"
+    },
+    {
+     "name": "text",
+     "type": "str",
+     "default": null,
+     "label": "tekst"
+    },
+    {
+     "name": "valid",
+     "type": "bool",
+     "default": null,
+     "label": "gyldig"
+    }
+   ],
+   "params": [
+    {
+     "name": "entity_id",
+     "type": "entity",
+     "default": "",
+     "label": "Entitet"
+    },
+    {
+     "name": "attribute",
+     "type": "text",
+     "default": "",
+     "label": "Attributt (valgfritt)"
+    },
+    {
+     "name": "on_invalid",
+     "type": "select",
+     "default": "hold",
+     "label": "Ved utilgjengelig",
+     "options": [
+      {
+       "value": "hold",
+       "label": "Hold siste verdi"
+      },
+      {
+       "value": "fallback",
+       "label": "Bruk reserveverdi"
+      }
+     ]
+    },
+    {
+     "name": "fallback",
+     "type": "number",
+     "default": 0,
+     "label": "Reserveverdi",
+     "show_if": {
+      "param": "on_invalid",
+      "in": [
+       "fallback"
+      ]
+     }
+    }
+   ],
+   "dynamic": null,
+   "ha": "entity_in",
+   "width": 150
+  },
+  {
+   "type": "entity_out",
+   "category": "io",
+   "title": "Skriv entitet",
+   "symbol": "OUT",
+   "description": "Skriver verdien til en HA-entitet via riktig tjeneste. Skriver bare når verdien endres (med valgfritt dødbånd og minste intervall).",
+   "inputs": [
+    {
+     "name": "value",
+     "type": "any",
+     "default": 0,
+     "label": "verdi"
+    },
+    {
+     "name": "en",
+     "type": "bool",
+     "default": true,
+     "label": "aktiv"
+    }
+   ],
+   "outputs": [],
+   "params": [
+    {
+     "name": "entity_id",
+     "type": "entity",
+     "default": "",
+     "label": "Entitet"
+    },
+    {
+     "name": "action",
+     "type": "select",
+     "default": "auto",
+     "label": "Handling",
+     "options": [
+      {
+       "value": "auto",
+       "label": "Automatisk (etter domene)"
+      },
+      {
+       "value": "on_off",
+       "label": "Av/på"
+      },
+      {
+       "value": "value",
+       "label": "Sett verdi"
+      },
+      {
+       "value": "brightness",
+       "label": "Lysstyrke %"
+      },
+      {
+       "value": "position",
+       "label": "Posisjon %"
+      },
+      {
+       "value": "temperature",
+       "label": "Temperatur"
+      },
+      {
+       "value": "option",
+       "label": "Velg alternativ"
+      },
+      {
+       "value": "press",
+       "label": "Trykk (på stigende flanke)"
+      },
+      {
+       "value": "custom",
+       "label": "Egendefinert tjeneste"
+      }
+     ]
+    },
+    {
+     "name": "service",
+     "type": "text",
+     "default": "",
+     "label": "Tjeneste",
+     "help": "f.eks. light.turn_on",
+     "show_if": {
+      "param": "action",
+      "in": [
+       "custom"
+      ]
+     }
+    },
+    {
+     "name": "data_key",
+     "type": "text",
+     "default": "",
+     "label": "Datafelt for verdien",
+     "help": "f.eks. brightness (tomt = ingen verdi sendes)",
+     "show_if": {
+      "param": "action",
+      "in": [
+       "custom"
+      ]
+     }
+    },
+    {
+     "name": "deadband",
+     "type": "number",
+     "default": 0,
+     "label": "Dødbånd",
+     "min": 0
+    },
+    {
+     "name": "min_interval",
+     "type": "number",
+     "default": 0,
+     "label": "Minste intervall (s)",
+     "min": 0
+    },
+    {
+     "name": "write_on_start",
+     "type": "bool",
+     "default": true,
+     "label": "Skriv ved oppstart"
+    }
+   ],
+   "dynamic": null,
+   "ha": "entity_out",
+   "width": 150
+  },
+  {
+   "type": "setpoint",
+   "category": "io",
+   "title": "Settpunkt (HA)",
+   "symbol": "SP",
+   "description": "Lager en number-entitet i HA som kan justeres fra dashboard, og gir verdien ut i programmet.",
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "value",
+     "type": "num",
+     "default": null,
+     "label": "verdi"
+    }
+   ],
+   "params": [
+    {
+     "name": "name",
+     "type": "text",
+     "default": "Settpunkt",
+     "label": "Navn"
+    },
+    {
+     "name": "initial",
+     "type": "number",
+     "default": 21,
+     "label": "Startverdi"
+    },
+    {
+     "name": "min",
+     "type": "number",
+     "default": 0,
+     "label": "Min"
+    },
+    {
+     "name": "max",
+     "type": "number",
+     "default": 100,
+     "label": "Maks"
+    },
+    {
+     "name": "step",
+     "type": "number",
+     "default": 0.5,
+     "label": "Steg"
+    },
+    {
+     "name": "unit",
+     "type": "text",
+     "default": "",
+     "label": "Enhet"
+    },
+    {
+     "name": "mode",
+     "type": "select",
+     "default": "box",
+     "label": "Visning",
+     "options": [
+      {
+       "value": "box",
+       "label": "Tallfelt"
+      },
+      {
+       "value": "slider",
+       "label": "Glidebryter"
+      },
+      {
+       "value": "auto",
+       "label": "Auto"
+      }
+     ]
+    }
+   ],
+   "dynamic": null,
+   "ha": "setpoint",
+   "width": 140
+  },
+  {
+   "type": "toggle",
+   "category": "io",
+   "title": "Bryter (HA)",
+   "symbol": "SW",
+   "description": "Lager en switch-entitet i HA (f.eks. manuell overstyring) og gir tilstanden ut.",
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    }
+   ],
+   "params": [
+    {
+     "name": "name",
+     "type": "text",
+     "default": "Bryter",
+     "label": "Navn"
+    },
+    {
+     "name": "initial",
+     "type": "bool",
+     "default": false,
+     "label": "Startverdi"
+    }
+   ],
+   "dynamic": null,
+   "ha": "toggle",
+   "width": 140
+  },
+  {
+   "type": "publish",
+   "category": "io",
+   "title": "Publiser verdi",
+   "symbol": "PUB",
+   "description": "Gjør et internt signal tilgjengelig som sensor/binary_sensor i HA (til dashboard, historikk og automasjoner).",
+   "inputs": [
+    {
+     "name": "value",
+     "type": "any",
+     "default": 0,
+     "label": "verdi"
+    }
+   ],
+   "outputs": [],
+   "params": [
+    {
+     "name": "name",
+     "type": "text",
+     "default": "Signal",
+     "label": "Navn"
+    },
+    {
+     "name": "kind",
+     "type": "select",
+     "default": "auto",
+     "label": "Type",
+     "options": [
+      {
+       "value": "auto",
+       "label": "Automatisk"
+      },
+      {
+       "value": "num",
+       "label": "Tall (sensor)"
+      },
+      {
+       "value": "bool",
+       "label": "Av/på (binary_sensor)"
+      },
+      {
+       "value": "text",
+       "label": "Tekst (sensor)"
+      }
+     ]
+    },
+    {
+     "name": "unit",
+     "type": "text",
+     "default": "",
+     "label": "Enhet"
+    },
+    {
+     "name": "device_class",
+     "type": "text",
+     "default": "",
+     "label": "Device class (valgfritt)",
+     "suggest": [
+      {
+       "value": "temperature",
+       "label": "Temperatur (tall)"
+      },
+      {
+       "value": "temperature_delta",
+       "label": "Temperaturdifferanse (tall)"
+      },
+      {
+       "value": "humidity",
+       "label": "Relativ fuktighet (tall)"
+      },
+      {
+       "value": "carbon_dioxide",
+       "label": "CO₂ (tall)"
+      },
+      {
+       "value": "volatile_organic_compounds_parts",
+       "label": "VOC (tall)"
+      },
+      {
+       "value": "pm25",
+       "label": "Svevestøv PM2.5 (tall)"
+      },
+      {
+       "value": "pressure",
+       "label": "Trykk (tall)"
+      },
+      {
+       "value": "volume_flow_rate",
+       "label": "Volumstrøm (tall)"
+      },
+      {
+       "value": "power",
+       "label": "Effekt (tall)"
+      },
+      {
+       "value": "energy",
+       "label": "Energi (tall)"
+      },
+      {
+       "value": "voltage",
+       "label": "Spenning (tall)"
+      },
+      {
+       "value": "current",
+       "label": "Strøm (tall)"
+      },
+      {
+       "value": "power_factor",
+       "label": "Effektfaktor (tall)"
+      },
+      {
+       "value": "frequency",
+       "label": "Frekvens (tall)"
+      },
+      {
+       "value": "illuminance",
+       "label": "Belysningsstyrke (tall)"
+      },
+      {
+       "value": "wind_speed",
+       "label": "Vindhastighet (tall)"
+      },
+      {
+       "value": "duration",
+       "label": "Varighet (tall)"
+      },
+      {
+       "value": "battery",
+       "label": "Batteri (tall eller av/på)"
+      },
+      {
+       "value": "running",
+       "label": "I drift (av/på)"
+      },
+      {
+       "value": "problem",
+       "label": "Feil/alarm (av/på)"
+      },
+      {
+       "value": "heat",
+       "label": "Varme (av/på)"
+      },
+      {
+       "value": "cold",
+       "label": "Kulde (av/på)"
+      },
+      {
+       "value": "door",
+       "label": "Dør (av/på)"
+      },
+      {
+       "value": "window",
+       "label": "Vindu (av/på)"
+      },
+      {
+       "value": "opening",
+       "label": "Åpen/lukket (av/på)"
+      },
+      {
+       "value": "motion",
+       "label": "Bevegelse (av/på)"
+      },
+      {
+       "value": "occupancy",
+       "label": "Tilstedeværelse (av/på)"
+      },
+      {
+       "value": "moisture",
+       "label": "Fukt/lekkasje (av/på)"
+      },
+      {
+       "value": "smoke",
+       "label": "Røyk (av/på)"
+      }
+     ],
+     "help": "HA-navnet med små bokstaver, f.eks. temperature. Velg fra listen eller skriv selv."
+    },
+    {
+     "name": "decimals",
+     "type": "number",
+     "default": 2,
+     "label": "Desimaler",
+     "min": 0,
+     "max": 6,
+     "step": 1
+    },
+    {
+     "name": "deadband",
+     "type": "number",
+     "default": 0,
+     "label": "Dødbånd",
+     "min": 0,
+     "help": "Tall sendes til HA først når de har endret seg minst så mye. 0 = hver endring."
+    },
+    {
+     "name": "min_interval",
+     "type": "number",
+     "default": 0,
+     "label": "Minste intervall (s)",
+     "min": 0,
+     "help": "Høyst én ny verdi så ofte. Siste verdi kommer alltid fram."
+    }
+   ],
+   "dynamic": null,
+   "ha": "publish",
+   "width": 140
+  },
+  {
+   "type": "const_num",
+   "category": "misc",
+   "title": "Konstant (tall)",
+   "symbol": "K",
+   "description": "Fast tallverdi.",
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "out",
+     "type": "num",
+     "default": null,
+     "label": "out"
+    }
+   ],
+   "params": [
+    {
+     "name": "value",
+     "type": "number",
+     "default": 0,
+     "label": "Verdi"
+    }
+   ],
+   "dynamic": null,
+   "ha": null,
+   "width": 100
+  },
+  {
+   "type": "const_bool",
+   "category": "misc",
+   "title": "Konstant (av/på)",
+   "symbol": "K",
+   "description": "Fast av/på-verdi.",
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    }
+   ],
+   "params": [
+    {
+     "name": "value",
+     "type": "bool",
+     "default": true,
+     "label": "Verdi"
+    }
+   ],
+   "dynamic": null,
+   "ha": null,
+   "width": 100
+  },
+  {
+   "type": "comment",
+   "category": "misc",
+   "title": "Kommentar",
+   "symbol": "",
+   "description": "Fritekst på tegningen. Påvirker ikke logikken.",
+   "inputs": [],
+   "outputs": [],
+   "params": [
+    {
+     "name": "text",
+     "type": "textarea",
+     "default": "Kommentar",
+     "label": "Tekst"
+    }
+   ],
+   "dynamic": null,
+   "ha": null,
+   "width": 180
+  },
+  {
+   "type": "and",
+   "category": "logic",
+   "title": "OG (AND)",
+   "symbol": "&",
+   "description": "Utgangen er på når alle innganger er på.",
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    }
+   ],
+   "params": [
+    {
+     "name": "n",
+     "type": "number",
+     "default": 2,
+     "label": "Antall innganger",
+     "min": 2,
+     "max": 8,
+     "step": 1
+    }
+   ],
+   "dynamic": {
+    "param": "n",
+    "prefix": "in",
+    "type": "bool",
+    "default": true,
+    "count": 2,
+    "min": 2,
+    "max": 8
+   },
+   "ha": null,
+   "width": 90
+  },
+  {
+   "type": "or",
+   "category": "logic",
+   "title": "ELLER (OR)",
+   "symbol": "≥1",
+   "description": "Utgangen er på når minst én inngang er på.",
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    }
+   ],
+   "params": [
+    {
+     "name": "n",
+     "type": "number",
+     "default": 2,
+     "label": "Antall innganger",
+     "min": 2,
+     "max": 8,
+     "step": 1
+    }
+   ],
+   "dynamic": {
+    "param": "n",
+    "prefix": "in",
+    "type": "bool",
+    "default": false,
+    "count": 2,
+    "min": 2,
+    "max": 8
+   },
+   "ha": null,
+   "width": 90
+  },
+  {
+   "type": "xor",
+   "category": "logic",
+   "title": "XOR",
+   "symbol": "=1",
+   "description": "Utgangen er på når et odde antall innganger er på.",
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    }
+   ],
+   "params": [
+    {
+     "name": "n",
+     "type": "number",
+     "default": 2,
+     "label": "Antall innganger",
+     "min": 2,
+     "max": 8,
+     "step": 1
+    }
+   ],
+   "dynamic": {
+    "param": "n",
+    "prefix": "in",
+    "type": "bool",
+    "default": false,
+    "count": 2,
+    "min": 2,
+    "max": 8
+   },
+   "ha": null,
+   "width": 90
+  },
+  {
+   "type": "not",
+   "category": "logic",
+   "title": "IKKE (NOT)",
+   "symbol": "1o",
+   "description": "Inverterer inngangen.",
+   "inputs": [
+    {
+     "name": "in",
+     "type": "bool",
+     "default": false,
+     "label": "in"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 90
+  },
+  {
+   "type": "sr",
+   "category": "logic",
+   "title": "SR-lås (sett dominant)",
+   "symbol": "SR",
+   "description": "Sett/tilbakestill-lås. Sett vinner hvis begge er på. Huskes over omstart.",
+   "inputs": [
+    {
+     "name": "s",
+     "type": "bool",
+     "default": false,
+     "label": "s"
+    },
+    {
+     "name": "r",
+     "type": "bool",
+     "default": false,
+     "label": "r"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 100
+  },
+  {
+   "type": "rs",
+   "category": "logic",
+   "title": "RS-lås (tilbakestill dominant)",
+   "symbol": "RS",
+   "description": "Sett/tilbakestill-lås. Tilbakestill vinner hvis begge er på. Huskes over omstart.",
+   "inputs": [
+    {
+     "name": "s",
+     "type": "bool",
+     "default": false,
+     "label": "s"
+    },
+    {
+     "name": "r",
+     "type": "bool",
+     "default": false,
+     "label": "r"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 100
+  },
+  {
+   "type": "r_trig",
+   "category": "logic",
+   "title": "Stigende flanke",
+   "symbol": "R_TRIG",
+   "description": "Gir én puls (ett skann) når inngangen går fra av til på.",
+   "inputs": [
+    {
+     "name": "in",
+     "type": "bool",
+     "default": false,
+     "label": "in"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 100
+  },
+  {
+   "type": "f_trig",
+   "category": "logic",
+   "title": "Fallende flanke",
+   "symbol": "F_TRIG",
+   "description": "Gir én puls (ett skann) når inngangen går fra på til av.",
+   "inputs": [
+    {
+     "name": "in",
+     "type": "bool",
+     "default": false,
+     "label": "in"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 100
+  },
+  {
+   "type": "toggle_ff",
+   "category": "logic",
+   "title": "Impulsrelé (toggle)",
+   "symbol": "T",
+   "description": "Hver stigende flanke på inngangen veksler utgangen. Huskes over omstart.",
+   "inputs": [
+    {
+     "name": "in",
+     "type": "bool",
+     "default": false,
+     "label": "in"
+    },
+    {
+     "name": "r",
+     "type": "bool",
+     "default": false,
+     "label": "r"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 100
+  },
+  {
+   "type": "gt",
+   "category": "compare",
+   "title": "Større enn",
+   "symbol": ">",
+   "description": "Utgangen er på når A > B.",
+   "inputs": [
+    {
+     "name": "a",
+     "type": "num",
+     "default": 0,
+     "label": "A"
+    },
+    {
+     "name": "b",
+     "type": "num",
+     "default": 0,
+     "label": "B"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 90
+  },
+  {
+   "type": "ge",
+   "category": "compare",
+   "title": "Større eller lik",
+   "symbol": "≥",
+   "description": "Utgangen er på når A ≥ B.",
+   "inputs": [
+    {
+     "name": "a",
+     "type": "num",
+     "default": 0,
+     "label": "A"
+    },
+    {
+     "name": "b",
+     "type": "num",
+     "default": 0,
+     "label": "B"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 90
+  },
+  {
+   "type": "lt",
+   "category": "compare",
+   "title": "Mindre enn",
+   "symbol": "<",
+   "description": "Utgangen er på når A < B.",
+   "inputs": [
+    {
+     "name": "a",
+     "type": "num",
+     "default": 0,
+     "label": "A"
+    },
+    {
+     "name": "b",
+     "type": "num",
+     "default": 0,
+     "label": "B"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 90
+  },
+  {
+   "type": "le",
+   "category": "compare",
+   "title": "Mindre eller lik",
+   "symbol": "≤",
+   "description": "Utgangen er på når A ≤ B.",
+   "inputs": [
+    {
+     "name": "a",
+     "type": "num",
+     "default": 0,
+     "label": "A"
+    },
+    {
+     "name": "b",
+     "type": "num",
+     "default": 0,
+     "label": "B"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 90
+  },
+  {
+   "type": "eq",
+   "category": "compare",
+   "title": "Lik",
+   "symbol": "=",
+   "description": "Utgangen er på når A = B.",
+   "inputs": [
+    {
+     "name": "a",
+     "type": "num",
+     "default": 0,
+     "label": "A"
+    },
+    {
+     "name": "b",
+     "type": "num",
+     "default": 0,
+     "label": "B"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 90
+  },
+  {
+   "type": "ne",
+   "category": "compare",
+   "title": "Ulik",
+   "symbol": "≠",
+   "description": "Utgangen er på når A ≠ B.",
+   "inputs": [
+    {
+     "name": "a",
+     "type": "num",
+     "default": 0,
+     "label": "A"
+    },
+    {
+     "name": "b",
+     "type": "num",
+     "default": 0,
+     "label": "B"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 90
+  },
+  {
+   "type": "hyst",
+   "category": "compare",
+   "title": "Hysterese",
+   "symbol": "HYST",
+   "description": "På når inngang ≥ høy, av når inngang ≤ lav, ellers uendret.",
+   "inputs": [
+    {
+     "name": "in",
+     "type": "num",
+     "default": 0,
+     "label": "in"
+    },
+    {
+     "name": "high",
+     "type": "num",
+     "default": 22,
+     "label": "høy"
+    },
+    {
+     "name": "low",
+     "type": "num",
+     "default": 20,
+     "label": "lav"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 100
+  },
+  {
+   "type": "in_range",
+   "category": "compare",
+   "title": "Innenfor område",
+   "symbol": "LO≤x≤HI",
+   "description": "På når lav ≤ inngang ≤ høy.",
+   "inputs": [
+    {
+     "name": "in",
+     "type": "num",
+     "default": 0,
+     "label": "in"
+    },
+    {
+     "name": "low",
+     "type": "num",
+     "default": 0,
+     "label": "lav"
+    },
+    {
+     "name": "high",
+     "type": "num",
+     "default": 100,
+     "label": "høy"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 110
+  },
+  {
+   "type": "sel",
+   "category": "compare",
+   "title": "Velger (SEL)",
+   "symbol": "SEL",
+   "description": "Gir ut in1 når g er på, ellers in0.",
+   "inputs": [
+    {
+     "name": "g",
+     "type": "bool",
+     "default": false,
+     "label": "g"
+    },
+    {
+     "name": "in0",
+     "type": "any",
+     "default": 0.0,
+     "label": "in0"
+    },
+    {
+     "name": "in1",
+     "type": "any",
+     "default": 0.0,
+     "label": "in1"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "out",
+     "type": "any",
+     "default": null,
+     "label": "out"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 100
+  },
+  {
+   "type": "text_eq",
+   "category": "compare",
+   "title": "Tekst lik",
+   "symbol": "TXT=",
+   "description": "På når teksten er lik oppgitt verdi (f.eks. hvac-modus 'heat').",
+   "inputs": [
+    {
+     "name": "in",
+     "type": "str",
+     "default": "",
+     "label": "in"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    }
+   ],
+   "params": [
+    {
+     "name": "text",
+     "type": "text",
+     "default": "",
+     "label": "Tekst"
+    },
+    {
+     "name": "ignore_case",
+     "type": "bool",
+     "default": true,
+     "label": "Ignorer store/små bokstaver"
+    }
+   ],
+   "dynamic": null,
+   "ha": null,
+   "width": 110
+  },
+  {
+   "type": "add",
+   "category": "math",
+   "title": "Addisjon",
+   "symbol": "+",
+   "description": "Summerer inngangene.",
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "out",
+     "type": "num",
+     "default": null,
+     "label": "out"
+    }
+   ],
+   "params": [
+    {
+     "name": "n",
+     "type": "number",
+     "default": 2,
+     "label": "Antall innganger",
+     "min": 2,
+     "max": 8,
+     "step": 1
+    }
+   ],
+   "dynamic": {
+    "param": "n",
+    "prefix": "in",
+    "type": "num",
+    "default": 0.0,
+    "count": 2,
+    "min": 2,
+    "max": 8
+   },
+   "ha": null,
+   "width": 90
+  },
+  {
+   "type": "sub",
+   "category": "math",
+   "title": "Subtraksjon",
+   "symbol": "−",
+   "description": "out = A − B",
+   "inputs": [
+    {
+     "name": "a",
+     "type": "num",
+     "default": 0,
+     "label": "A"
+    },
+    {
+     "name": "b",
+     "type": "num",
+     "default": 0,
+     "label": "B"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "out",
+     "type": "num",
+     "default": null,
+     "label": "out"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 90
+  },
+  {
+   "type": "mul",
+   "category": "math",
+   "title": "Multiplikasjon",
+   "symbol": "×",
+   "description": "Multipliserer inngangene.",
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "out",
+     "type": "num",
+     "default": null,
+     "label": "out"
+    }
+   ],
+   "params": [
+    {
+     "name": "n",
+     "type": "number",
+     "default": 2,
+     "label": "Antall innganger",
+     "min": 2,
+     "max": 8,
+     "step": 1
+    }
+   ],
+   "dynamic": {
+    "param": "n",
+    "prefix": "in",
+    "type": "num",
+    "default": 1.0,
+    "count": 2,
+    "min": 2,
+    "max": 8
+   },
+   "ha": null,
+   "width": 90
+  },
+  {
+   "type": "div",
+   "category": "math",
+   "title": "Divisjon",
+   "symbol": "÷",
+   "description": "out = A ÷ B. Ved deling på null blir out 0 og err på.",
+   "inputs": [
+    {
+     "name": "a",
+     "type": "num",
+     "default": 0,
+     "label": "A"
+    },
+    {
+     "name": "b",
+     "type": "num",
+     "default": 1,
+     "label": "B"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "out",
+     "type": "num",
+     "default": null,
+     "label": "out"
+    },
+    {
+     "name": "err",
+     "type": "bool",
+     "default": null,
+     "label": "err"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 90
+  },
+  {
+   "type": "min",
+   "category": "math",
+   "title": "Minimum",
+   "symbol": "MIN",
+   "description": "Laveste av inngangene.",
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "out",
+     "type": "num",
+     "default": null,
+     "label": "out"
+    }
+   ],
+   "params": [
+    {
+     "name": "n",
+     "type": "number",
+     "default": 2,
+     "label": "Antall innganger",
+     "min": 2,
+     "max": 8,
+     "step": 1
+    }
+   ],
+   "dynamic": {
+    "param": "n",
+    "prefix": "in",
+    "type": "num",
+    "default": 0.0,
+    "count": 2,
+    "min": 2,
+    "max": 8
+   },
+   "ha": null,
+   "width": 90
+  },
+  {
+   "type": "max",
+   "category": "math",
+   "title": "Maksimum",
+   "symbol": "MAX",
+   "description": "Høyeste av inngangene.",
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "out",
+     "type": "num",
+     "default": null,
+     "label": "out"
+    }
+   ],
+   "params": [
+    {
+     "name": "n",
+     "type": "number",
+     "default": 2,
+     "label": "Antall innganger",
+     "min": 2,
+     "max": 8,
+     "step": 1
+    }
+   ],
+   "dynamic": {
+    "param": "n",
+    "prefix": "in",
+    "type": "num",
+    "default": 0.0,
+    "count": 2,
+    "min": 2,
+    "max": 8
+   },
+   "ha": null,
+   "width": 90
+  },
+  {
+   "type": "avg",
+   "category": "math",
+   "title": "Gjennomsnitt",
+   "symbol": "AVG",
+   "description": "Gjennomsnitt av inngangene.",
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "out",
+     "type": "num",
+     "default": null,
+     "label": "out"
+    }
+   ],
+   "params": [
+    {
+     "name": "n",
+     "type": "number",
+     "default": 2,
+     "label": "Antall innganger",
+     "min": 2,
+     "max": 8,
+     "step": 1
+    }
+   ],
+   "dynamic": {
+    "param": "n",
+    "prefix": "in",
+    "type": "num",
+    "default": 0.0,
+    "count": 2,
+    "min": 2,
+    "max": 8
+   },
+   "ha": null,
+   "width": 90
+  },
+  {
+   "type": "abs",
+   "category": "math",
+   "title": "Absoluttverdi",
+   "symbol": "ABS",
+   "description": "out = |in|",
+   "inputs": [
+    {
+     "name": "in",
+     "type": "num",
+     "default": 0,
+     "label": "in"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "out",
+     "type": "num",
+     "default": null,
+     "label": "out"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 90
+  },
+  {
+   "type": "limit",
+   "category": "math",
+   "title": "Begrensning",
+   "symbol": "LIMIT",
+   "description": "Begrenser inngangen til [min, maks].",
+   "inputs": [
+    {
+     "name": "in",
+     "type": "num",
+     "default": 0,
+     "label": "in"
+    },
+    {
+     "name": "min",
+     "type": "num",
+     "default": 0,
+     "label": "min"
+    },
+    {
+     "name": "max",
+     "type": "num",
+     "default": 100,
+     "label": "maks"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "out",
+     "type": "num",
+     "default": null,
+     "label": "out"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 100
+  },
+  {
+   "type": "scale",
+   "category": "math",
+   "title": "Skalering (lineær)",
+   "symbol": "SCALE",
+   "description": "Lineær skalering fra [inn lav, inn høy] til [ut lav, ut høy].",
+   "inputs": [
+    {
+     "name": "in",
+     "type": "num",
+     "default": 0,
+     "label": "in"
+    },
+    {
+     "name": "in_lo",
+     "type": "num",
+     "default": 0,
+     "label": "inn lav"
+    },
+    {
+     "name": "in_hi",
+     "type": "num",
+     "default": 100,
+     "label": "inn høy"
+    },
+    {
+     "name": "out_lo",
+     "type": "num",
+     "default": 0,
+     "label": "ut lav"
+    },
+    {
+     "name": "out_hi",
+     "type": "num",
+     "default": 100,
+     "label": "ut høy"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "out",
+     "type": "num",
+     "default": null,
+     "label": "out"
+    }
+   ],
+   "params": [
+    {
+     "name": "clamp",
+     "type": "bool",
+     "default": true,
+     "label": "Begrens til utområdet"
+    }
+   ],
+   "dynamic": null,
+   "ha": null,
+   "width": 110
+  },
+  {
+   "type": "round",
+   "category": "math",
+   "title": "Avrunding",
+   "symbol": "ROUND",
+   "description": "Runder av til valgt antall desimaler.",
+   "inputs": [
+    {
+     "name": "in",
+     "type": "num",
+     "default": 0,
+     "label": "in"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "out",
+     "type": "num",
+     "default": null,
+     "label": "out"
+    }
+   ],
+   "params": [
+    {
+     "name": "decimals",
+     "type": "number",
+     "default": 0,
+     "label": "Desimaler",
+     "min": 0,
+     "max": 6,
+     "step": 1
+    }
+   ],
+   "dynamic": null,
+   "ha": null,
+   "width": 90
+  },
+  {
+   "type": "formula",
+   "category": "math",
+   "title": "Formel",
+   "symbol": "f(x)",
+   "description": "Fritt uttrykk med innganger a…h, f.eks. 'a*0.5 + b' eller 'sel(a > 20, b, c)'. Funksjoner: abs, min, max, round, sqrt, clamp, sel, floor, ceil, sin, cos, log, exp.",
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "out",
+     "type": "num",
+     "default": null,
+     "label": "out"
+    },
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    }
+   ],
+   "params": [
+    {
+     "name": "expr",
+     "type": "text",
+     "default": "a + b",
+     "label": "Uttrykk"
+    },
+    {
+     "name": "n",
+     "type": "number",
+     "default": 2,
+     "label": "Antall innganger",
+     "min": 1,
+     "max": 8,
+     "step": 1
+    }
+   ],
+   "dynamic": {
+    "param": "n",
+    "names": [
+     "a",
+     "b",
+     "c",
+     "d",
+     "e",
+     "f",
+     "g",
+     "h"
+    ],
+    "type": "num",
+    "default": 0.0,
+    "count": 2,
+    "min": 1,
+    "max": 8
+   },
+   "ha": null,
+   "width": 130
+  },
+  {
+   "type": "ton",
+   "category": "time",
+   "title": "Innkoblingsforsinkelse",
+   "symbol": "TON",
+   "description": "Utgangen går på når inngangen har vært på i 'tid' sekunder.",
+   "inputs": [
+    {
+     "name": "in",
+     "type": "bool",
+     "default": false,
+     "label": "in"
+    },
+    {
+     "name": "pt",
+     "type": "num",
+     "default": 5,
+     "label": "tid s"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    },
+    {
+     "name": "et",
+     "type": "num",
+     "default": null,
+     "label": "gått s"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 100
+  },
+  {
+   "type": "tof",
+   "category": "time",
+   "title": "Utkoblingsforsinkelse",
+   "symbol": "TOF",
+   "description": "Utgangen går av 'tid' sekunder etter at inngangen gikk av.",
+   "inputs": [
+    {
+     "name": "in",
+     "type": "bool",
+     "default": false,
+     "label": "in"
+    },
+    {
+     "name": "pt",
+     "type": "num",
+     "default": 5,
+     "label": "tid s"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    },
+    {
+     "name": "et",
+     "type": "num",
+     "default": null,
+     "label": "gått s"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 100
+  },
+  {
+   "type": "tp",
+   "category": "time",
+   "title": "Puls",
+   "symbol": "TP",
+   "description": "Stigende flanke gir en puls med fast lengde ('tid' sekunder).",
+   "inputs": [
+    {
+     "name": "in",
+     "type": "bool",
+     "default": false,
+     "label": "in"
+    },
+    {
+     "name": "pt",
+     "type": "num",
+     "default": 5,
+     "label": "tid s"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    },
+    {
+     "name": "et",
+     "type": "num",
+     "default": null,
+     "label": "gått s"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 100
+  },
+  {
+   "type": "blink",
+   "category": "time",
+   "title": "Pulsgenerator",
+   "symbol": "BLINK",
+   "description": "Blinker med valgt på- og av-tid mens aktiv.",
+   "inputs": [
+    {
+     "name": "en",
+     "type": "bool",
+     "default": true,
+     "label": "aktiv"
+    },
+    {
+     "name": "t_on",
+     "type": "num",
+     "default": 1,
+     "label": "på s"
+    },
+    {
+     "name": "t_off",
+     "type": "num",
+     "default": 1,
+     "label": "av s"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 100
+  },
+  {
+   "type": "clock",
+   "category": "time",
+   "title": "Klokke",
+   "symbol": "CLOCK",
+   "description": "Lokal tid: time, minutt, minutter siden midnatt, ukedag (1=man) og helg.",
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "hour",
+     "type": "num",
+     "default": null,
+     "label": "time"
+    },
+    {
+     "name": "minute",
+     "type": "num",
+     "default": null,
+     "label": "min"
+    },
+    {
+     "name": "daymin",
+     "type": "num",
+     "default": null,
+     "label": "dagmin"
+    },
+    {
+     "name": "weekday",
+     "type": "num",
+     "default": null,
+     "label": "ukedag"
+    },
+    {
+     "name": "weekend",
+     "type": "bool",
+     "default": null,
+     "label": "helg"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 110
+  },
+  {
+   "type": "runtime",
+   "category": "time",
+   "title": "Driftstid",
+   "symbol": "RUNTIME",
+   "description": "Teller driftstimer mens inngangen er på. Huskes over omstart.",
+   "inputs": [
+    {
+     "name": "in",
+     "type": "bool",
+     "default": false,
+     "label": "in"
+    },
+    {
+     "name": "reset",
+     "type": "bool",
+     "default": false,
+     "label": "reset"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "hours",
+     "type": "num",
+     "default": null,
+     "label": "timer"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 110
+  },
+  {
+   "type": "counter",
+   "category": "time",
+   "title": "Teller",
+   "symbol": "CTU",
+   "description": "Teller stigende flanker. Huskes over omstart.",
+   "inputs": [
+    {
+     "name": "cu",
+     "type": "bool",
+     "default": false,
+     "label": "cu"
+    },
+    {
+     "name": "reset",
+     "type": "bool",
+     "default": false,
+     "label": "reset"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "count",
+     "type": "num",
+     "default": null,
+     "label": "count"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 100
+  },
+  {
+   "type": "pid",
+   "category": "control",
+   "title": "PID-regulator",
+   "symbol": "PID",
+   "description": "Generell PID-regulator med anti-windup, for alle slags prosesser (temperatur, trykk, fukt, CO₂, nivå, lys). Revers: utgangen øker når PV er under SP (f.eks. varme, befukting). Direkte: utgangen øker når PV er over SP (f.eks. kjøling, CO₂ til ventilasjon). Ti = integraltid i sekunder (0 = av), Td = derivattid i sekunder (derivatet virker på PV og er filtrert med Td/10). Aktiv av gir min ut, manuell gir den manuelle verdien ut. Overgangen tilbake til automatikk er støtfri: utgangen fortsetter der den var. Arbeidspunktet legges til utgangen (nyttig for ren P-regulering eller foroverkobling).",
+   "inputs": [
+    {
+     "name": "pv",
+     "type": "num",
+     "default": 0,
+     "label": "PV"
+    },
+    {
+     "name": "sp",
+     "type": "num",
+     "default": 21,
+     "label": "SP"
+    },
+    {
+     "name": "en",
+     "type": "bool",
+     "default": true,
+     "label": "aktiv"
+    },
+    {
+     "name": "man",
+     "type": "bool",
+     "default": false,
+     "label": "manuell"
+    },
+    {
+     "name": "mv",
+     "type": "num",
+     "default": 0,
+     "label": "man. verdi"
+    },
+    {
+     "name": "kp",
+     "type": "num",
+     "default": 5,
+     "label": "Kp"
+    },
+    {
+     "name": "ti",
+     "type": "num",
+     "default": 120,
+     "label": "Ti s"
+    },
+    {
+     "name": "td",
+     "type": "num",
+     "default": 0,
+     "label": "Td s"
+    },
+    {
+     "name": "bias",
+     "type": "num",
+     "default": 0,
+     "label": "arb.punkt"
+    },
+    {
+     "name": "min",
+     "type": "num",
+     "default": 0,
+     "label": "min"
+    },
+    {
+     "name": "max",
+     "type": "num",
+     "default": 100,
+     "label": "maks"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "out",
+     "type": "num",
+     "default": null,
+     "label": "out"
+    },
+    {
+     "name": "err",
+     "type": "num",
+     "default": null,
+     "label": "avvik"
+    },
+    {
+     "name": "auto",
+     "type": "bool",
+     "default": null,
+     "label": "auto"
+    }
+   ],
+   "params": [
+    {
+     "name": "direction",
+     "type": "select",
+     "default": "reverse",
+     "label": "Virkning",
+     "options": [
+      {
+       "value": "reverse",
+       "label": "Revers: øker når PV < SP (f.eks. varme)"
+      },
+      {
+       "value": "direct",
+       "label": "Direkte: øker når PV > SP (f.eks. kjøling)"
+      }
+     ]
+    },
+    {
+     "name": "deadband",
+     "type": "number",
+     "default": 0,
+     "label": "Dødbånd",
+     "min": 0,
+     "help": "Avvik innenfor ± dødbåndet regnes som 0, så pådraget står stille nær SP (sparer spjeld- og ventilmotorer). Samme enhet som PV. 0 = av."
+    }
+   ],
+   "dynamic": null,
+   "ha": null,
+   "width": 120
+  },
+  {
+   "type": "ramp",
+   "category": "control",
+   "title": "Rampe",
+   "symbol": "RAMP",
+   "description": "Utgangen følger inngangen med maks endring 'rate' per sekund.",
+   "inputs": [
+    {
+     "name": "in",
+     "type": "num",
+     "default": 0,
+     "label": "in"
+    },
+    {
+     "name": "rate",
+     "type": "num",
+     "default": 1,
+     "label": "rate/s"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "out",
+     "type": "num",
+     "default": null,
+     "label": "out"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 100
+  },
+  {
+   "type": "pt1",
+   "category": "control",
+   "title": "Lavpassfilter",
+   "symbol": "PT1",
+   "description": "Førsteordens filter med tidskonstant tau (sekunder).",
+   "inputs": [
+    {
+     "name": "in",
+     "type": "num",
+     "default": 0,
+     "label": "in"
+    },
+    {
+     "name": "tau",
+     "type": "num",
+     "default": 10,
+     "label": "tau s"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "out",
+     "type": "num",
+     "default": null,
+     "label": "out"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 100
+  },
+  {
+   "type": "mux",
+   "category": "compare",
+   "title": "Multiplekser (MUX)",
+   "symbol": "MUX",
+   "description": "Gir ut inngangen som indeksen k peker på (in0, in1, …). Ugyldig indeks begrenses til nærmeste inngang og setter err.",
+   "inputs": [
+    {
+     "name": "k",
+     "type": "num",
+     "default": 0,
+     "label": "k"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "out",
+     "type": "any",
+     "default": null,
+     "label": "out"
+    },
+    {
+     "name": "err",
+     "type": "bool",
+     "default": null,
+     "label": "err"
+    }
+   ],
+   "params": [
+    {
+     "name": "n",
+     "type": "number",
+     "default": 3,
+     "label": "Antall innganger",
+     "min": 2,
+     "max": 16,
+     "step": 1
+    }
+   ],
+   "dynamic": {
+    "param": "n",
+    "prefix": "in",
+    "start": 0,
+    "after": true,
+    "type": "any",
+    "default": 0.0,
+    "count": 3,
+    "min": 2,
+    "max": 16
+   },
+   "ha": null,
+   "width": 100
+  },
+  {
+   "type": "prio",
+   "category": "compare",
+   "title": "Prioritetsvelger",
+   "symbol": "PRIO",
+   "description": "Gir ut verdien til første aktive prioritet (g1 høyest), ellers 'ellers'. Typisk: manuell > alarm > tidsprogram > auto. idx = aktiv prioritet (0 = ingen).",
+   "inputs": [
+    {
+     "name": "else",
+     "type": "any",
+     "default": 0.0,
+     "label": "ellers"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "out",
+     "type": "any",
+     "default": null,
+     "label": "out"
+    },
+    {
+     "name": "idx",
+     "type": "num",
+     "default": null,
+     "label": "idx"
+    }
+   ],
+   "params": [
+    {
+     "name": "n",
+     "type": "number",
+     "default": 3,
+     "label": "Antall prioriteter",
+     "min": 1,
+     "max": 8,
+     "step": 1
+    }
+   ],
+   "dynamic": {
+    "param": "n",
+    "pairs": [
+     [
+      "g",
+      "bool",
+      false
+     ],
+     [
+      "in",
+      "any",
+      0.0
+     ]
+    ],
+    "count": 3,
+    "min": 1,
+    "max": 8
+   },
+   "ha": null,
+   "width": 110
+  },
+  {
+   "type": "bit_get",
+   "category": "math",
+   "title": "Hent bit",
+   "symbol": "BIT",
+   "description": "Henter én bit (0 = minst signifikant) ut av et heltall, f.eks. et Modbus statusord.",
+   "inputs": [
+    {
+     "name": "in",
+     "type": "num",
+     "default": 0,
+     "label": "in"
+    },
+    {
+     "name": "bit",
+     "type": "num",
+     "default": 0,
+     "label": "bit"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 90
+  },
+  {
+   "type": "schedule",
+   "category": "time",
+   "title": "Ukeplan",
+   "symbol": "UKE",
+   "description": "Tidsprogram med perioder per ukedag. q er på i periodene, value gir verdi for på/av (f.eks. 21/18 °C), next er minutter til neste skift. En periode der av er før på, går over midnatt. aktiv = av gir q av (f.eks. helligdag).",
+   "inputs": [
+    {
+     "name": "en",
+     "type": "bool",
+     "default": true,
+     "label": "aktiv"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "q",
+     "type": "bool",
+     "default": null,
+     "label": "q"
+    },
+    {
+     "name": "value",
+     "type": "num",
+     "default": null,
+     "label": "verdi"
+    },
+    {
+     "name": "next",
+     "type": "num",
+     "default": null,
+     "label": "neste min"
+    }
+   ],
+   "params": [
+    {
+     "name": "periods",
+     "type": "schedule",
+     "default": [
+      {
+       "days": [
+        1,
+        2,
+        3,
+        4,
+        5
+       ],
+       "on": "07:00",
+       "off": "16:00"
+      }
+     ],
+     "label": "Perioder"
+    },
+    {
+     "name": "on_value",
+     "type": "number",
+     "default": 1,
+     "label": "Verdi i periode"
+    },
+    {
+     "name": "off_value",
+     "type": "number",
+     "default": 0,
+     "label": "Verdi utenfor periode"
+    }
+   ],
+   "dynamic": null,
+   "ha": null,
+   "width": 130
+  },
+  {
+   "type": "page_out",
+   "category": "misc",
+   "title": "Koblingspunkt (sender)",
+   "symbol": "→",
+   "description": "Sender et signal under et navn. Hentes med «Koblingspunkt (mottaker)» med samme navn, på samme eller en annen side.",
+   "inputs": [
+    {
+     "name": "value",
+     "type": "any",
+     "default": 0.0,
+     "label": "verdi"
+    }
+   ],
+   "outputs": [],
+   "params": [
+    {
+     "name": "name",
+     "type": "text",
+     "default": "signal1",
+     "label": "Navn"
+    }
+   ],
+   "dynamic": null,
+   "ha": null,
+   "width": 120
+  },
+  {
+   "type": "page_in",
+   "category": "misc",
+   "title": "Koblingspunkt (mottaker)",
+   "symbol": "←",
+   "description": "Henter signalet fra koblingspunktet (sender) med samme navn.",
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "value",
+     "type": "any",
+     "default": null,
+     "label": "verdi"
+    }
+   ],
+   "params": [
+    {
+     "name": "name",
+     "type": "text",
+     "default": "signal1",
+     "label": "Navn"
+    }
+   ],
+   "dynamic": null,
+   "ha": null,
+   "width": 120
+  },
+  {
+   "type": "macro_in",
+   "category": "macro_io",
+   "title": "Makro-inngang",
+   "symbol": "IN▸",
+   "description": "En inngang på makroblokken. Rekkefølgen på blokken følger høyden på tegningen.",
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "value",
+     "type": "any",
+     "default": null,
+     "label": "verdi"
+    }
+   ],
+   "params": [
+    {
+     "name": "name",
+     "type": "text",
+     "default": "inn1",
+     "label": "Navn på pinnen"
+    },
+    {
+     "name": "type",
+     "type": "select",
+     "default": "num",
+     "label": "Type",
+     "options": [
+      {
+       "value": "num",
+       "label": "Tall"
+      },
+      {
+       "value": "bool",
+       "label": "Av/på"
+      },
+      {
+       "value": "str",
+       "label": "Tekst"
+      },
+      {
+       "value": "any",
+       "label": "Valgfri"
+      }
+     ]
+    },
+    {
+     "name": "default",
+     "type": "text",
+     "default": "0",
+     "label": "Standardverdi (når pinnen ikke er koblet)"
+    }
+   ],
+   "dynamic": null,
+   "ha": null,
+   "width": 120
+  },
+  {
+   "type": "macro_out",
+   "category": "macro_io",
+   "title": "Makro-utgang",
+   "symbol": "▸OUT",
+   "description": "En utgang på makroblokken. Rekkefølgen følger høyden på tegningen.",
+   "inputs": [
+    {
+     "name": "value",
+     "type": "any",
+     "default": 0.0,
+     "label": "verdi"
+    }
+   ],
+   "outputs": [],
+   "params": [
+    {
+     "name": "name",
+     "type": "text",
+     "default": "ut1",
+     "label": "Navn på pinnen"
+    },
+    {
+     "name": "type",
+     "type": "select",
+     "default": "num",
+     "label": "Type",
+     "options": [
+      {
+       "value": "num",
+       "label": "Tall"
+      },
+      {
+       "value": "bool",
+       "label": "Av/på"
+      },
+      {
+       "value": "str",
+       "label": "Tekst"
+      },
+      {
+       "value": "any",
+       "label": "Valgfri"
+      }
+     ]
+    }
+   ],
+   "dynamic": null,
+   "ha": null,
+   "width": 120
+  },
+  {
+   "type": "knx_send",
+   "category": "bus",
+   "title": "KNX send",
+   "symbol": "KNX▸",
+   "description": "Sender verdien til en KNX-gruppeadresse (knx.send) med valgt DPT. Sender bare ved endring, med dødbånd, minste intervall og valgfri syklisk sending.",
+   "inputs": [
+    {
+     "name": "value",
+     "type": "any",
+     "default": 0,
+     "label": "verdi"
+    },
+    {
+     "name": "en",
+     "type": "bool",
+     "default": true,
+     "label": "aktiv"
+    }
+   ],
+   "outputs": [],
+   "params": [
+    {
+     "name": "address",
+     "type": "text",
+     "default": "",
+     "label": "Gruppeadresse",
+     "help": "f.eks. 1/2/3"
+    },
+    {
+     "name": "dpt",
+     "type": "select",
+     "default": "1.001",
+     "label": "Datatype (DPT)",
+     "options": [
+      {
+       "value": "1.001",
+       "label": "1.001 Av/på"
+      },
+      {
+       "value": "1.008",
+       "label": "1.008 Opp/ned"
+      },
+      {
+       "value": "1.009",
+       "label": "1.009 Åpne/lukk"
+      },
+      {
+       "value": "5.001",
+       "label": "5.001 Prosent 0–100 %"
+      },
+      {
+       "value": "5.010",
+       "label": "5.010 Heltall 0–255"
+      },
+      {
+       "value": "7.001",
+       "label": "7.001 Heltall 0–65535"
+      },
+      {
+       "value": "9.001",
+       "label": "9.001 Temperatur °C"
+      },
+      {
+       "value": "9.004",
+       "label": "9.004 Lux"
+      },
+      {
+       "value": "9.007",
+       "label": "9.007 Fuktighet %"
+      },
+      {
+       "value": "9.008",
+       "label": "9.008 CO₂ ppm"
+      },
+      {
+       "value": "13.001",
+       "label": "13.001 Heltall 32 bit"
+      },
+      {
+       "value": "14.056",
+       "label": "14.056 Effekt W (float)"
+      },
+      {
+       "value": "17.001",
+       "label": "17.001 Scene 0–63"
+      },
+      {
+       "value": "custom",
+       "label": "Annen DPT…"
+      }
+     ]
+    },
+    {
+     "name": "dpt_custom",
+     "type": "text",
+     "default": "",
+     "label": "DPT / type",
+     "help": "f.eks. 9.005 eller percent",
+     "show_if": {
+      "param": "dpt",
+      "in": [
+       "custom"
+      ]
+     }
+    },
+    {
+     "name": "deadband",
+     "type": "number",
+     "default": 0,
+     "label": "Dødbånd",
+     "min": 0
+    },
+    {
+     "name": "min_interval",
+     "type": "number",
+     "default": 0,
+     "label": "Minste intervall (s)",
+     "min": 0
+    },
+    {
+     "name": "cyclic",
+     "type": "number",
+     "default": 0,
+     "label": "Send syklisk hvert (s, 0 = av)",
+     "min": 0
+    },
+    {
+     "name": "write_on_start",
+     "type": "bool",
+     "default": true,
+     "label": "Send ved oppstart"
+    }
+   ],
+   "dynamic": null,
+   "ha": null,
+   "width": 140
+  },
+  {
+   "type": "knx_read",
+   "category": "bus",
+   "title": "KNX lytt",
+   "symbol": "▸KNX",
+   "description": "Lytter på telegrammer til en KNX-gruppeadresse (knx_event) og gir ut siste verdi. 'ny' er en puls når et telegram kommer. Kan sende leseforespørsel ved oppstart.",
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "value",
+     "type": "num",
+     "default": null,
+     "label": "verdi"
+    },
+    {
+     "name": "on",
+     "type": "bool",
+     "default": null,
+     "label": "på"
+    },
+    {
+     "name": "valid",
+     "type": "bool",
+     "default": null,
+     "label": "gyldig"
+    },
+    {
+     "name": "new",
+     "type": "bool",
+     "default": null,
+     "label": "ny"
+    }
+   ],
+   "params": [
+    {
+     "name": "address",
+     "type": "text",
+     "default": "",
+     "label": "Gruppeadresse",
+     "help": "f.eks. 1/2/3"
+    },
+    {
+     "name": "dpt",
+     "type": "select",
+     "default": "1.001",
+     "label": "Datatype (DPT)",
+     "options": [
+      {
+       "value": "1.001",
+       "label": "1.001 Av/på"
+      },
+      {
+       "value": "1.008",
+       "label": "1.008 Opp/ned"
+      },
+      {
+       "value": "1.009",
+       "label": "1.009 Åpne/lukk"
+      },
+      {
+       "value": "5.001",
+       "label": "5.001 Prosent 0–100 %"
+      },
+      {
+       "value": "5.010",
+       "label": "5.010 Heltall 0–255"
+      },
+      {
+       "value": "7.001",
+       "label": "7.001 Heltall 0–65535"
+      },
+      {
+       "value": "9.001",
+       "label": "9.001 Temperatur °C"
+      },
+      {
+       "value": "9.004",
+       "label": "9.004 Lux"
+      },
+      {
+       "value": "9.007",
+       "label": "9.007 Fuktighet %"
+      },
+      {
+       "value": "9.008",
+       "label": "9.008 CO₂ ppm"
+      },
+      {
+       "value": "13.001",
+       "label": "13.001 Heltall 32 bit"
+      },
+      {
+       "value": "14.056",
+       "label": "14.056 Effekt W (float)"
+      },
+      {
+       "value": "17.001",
+       "label": "17.001 Scene 0–63"
+      },
+      {
+       "value": "custom",
+       "label": "Annen DPT…"
+      }
+     ]
+    },
+    {
+     "name": "dpt_custom",
+     "type": "text",
+     "default": "",
+     "label": "DPT / type",
+     "show_if": {
+      "param": "dpt",
+      "in": [
+       "custom"
+      ]
+     }
+    },
+    {
+     "name": "read_on_start",
+     "type": "bool",
+     "default": true,
+     "label": "Send leseforespørsel ved oppstart"
+    }
+   ],
+   "dynamic": null,
+   "ha": null,
+   "width": 140
+  },
+  {
+   "type": "modbus_write",
+   "category": "bus",
+   "title": "Modbus skriv",
+   "symbol": "MB▸",
+   "description": "Skriver til et holding-register eller en coil via HAs Modbus-integrasjon (modbus.write_register / write_coil). Råverdi = verdi × skala. Les Modbus-verdier med «Les entitet» mot en Modbus-sensor.",
+   "inputs": [
+    {
+     "name": "value",
+     "type": "any",
+     "default": 0,
+     "label": "verdi"
+    },
+    {
+     "name": "en",
+     "type": "bool",
+     "default": true,
+     "label": "aktiv"
+    }
+   ],
+   "outputs": [],
+   "params": [
+    {
+     "name": "hub",
+     "type": "text",
+     "default": "modbus_hub",
+     "label": "Hub (navn i modbus-oppsettet)"
+    },
+    {
+     "name": "slave",
+     "type": "number",
+     "default": 1,
+     "label": "Enhetsadresse (slave)",
+     "min": 0,
+     "max": 255,
+     "step": 1
+    },
+    {
+     "name": "address",
+     "type": "number",
+     "default": 0,
+     "label": "Registeradresse",
+     "min": 0,
+     "max": 65535,
+     "step": 1
+    },
+    {
+     "name": "kind",
+     "type": "select",
+     "default": "register",
+     "label": "Type",
+     "options": [
+      {
+       "value": "register",
+       "label": "Holding-register"
+      },
+      {
+       "value": "coil",
+       "label": "Coil"
+      }
+     ]
+    },
+    {
+     "name": "dtype",
+     "type": "select",
+     "default": "int16",
+     "label": "Datatype",
+     "options": [
+      {
+       "value": "int16",
+       "label": "int16"
+      },
+      {
+       "value": "uint16",
+       "label": "uint16"
+      },
+      {
+       "value": "int32",
+       "label": "int32 (2 reg.)"
+      },
+      {
+       "value": "uint32",
+       "label": "uint32 (2 reg.)"
+      },
+      {
+       "value": "float32",
+       "label": "float32 (2 reg.)"
+      }
+     ],
+     "show_if": {
+      "param": "kind",
+      "in": [
+       "register"
+      ]
+     }
+    },
+    {
+     "name": "word_order",
+     "type": "select",
+     "default": "big",
+     "label": "Ordrekkefølge (32 bit)",
+     "options": [
+      {
+       "value": "big",
+       "label": "Høy først (big)"
+      },
+      {
+       "value": "little",
+       "label": "Lav først (swap)"
+      }
+     ],
+     "show_if": {
+      "param": "kind",
+      "in": [
+       "register"
+      ]
+     }
+    },
+    {
+     "name": "scale",
+     "type": "number",
+     "default": 1,
+     "label": "Skala",
+     "show_if": {
+      "param": "kind",
+      "in": [
+       "register"
+      ]
+     }
+    },
+    {
+     "name": "deadband",
+     "type": "number",
+     "default": 0,
+     "label": "Dødbånd",
+     "min": 0
+    },
+    {
+     "name": "min_interval",
+     "type": "number",
+     "default": 0,
+     "label": "Minste intervall (s)",
+     "min": 0
+    },
+    {
+     "name": "cyclic",
+     "type": "number",
+     "default": 0,
+     "label": "Send syklisk hvert (s, 0 = av)",
+     "min": 0
+    },
+    {
+     "name": "write_on_start",
+     "type": "bool",
+     "default": true,
+     "label": "Send ved oppstart"
+    }
+   ],
+   "dynamic": null,
+   "ha": null,
+   "width": 140
+  }
+ ]
+}

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FBD panel test</title>
+<style>
+  html, body { margin: 0; height: 100%; }
+  body.dark { --primary-background-color:#111; --card-background-color:#1c1c1c; --primary-text-color:#e1e1e1;
+    --secondary-text-color:#9b9b9b; --divider-color:#333; --secondary-background-color:#282828; }
+  /* Mirror Home Assistant: partial-panel-resolver has the viewport height, ha-panel-custom has none.
+     The panel must size itself, so it is NOT given a height here. */
+  .resolver { display: block; height: 100%; }
+  .panel-custom { display: block; }
+</style>
+</head>
+<body>
+<script type="module">
+  // The block library as the backend sends it, per language (regenerate both when blocks change)
+  const libs = { nb: await (await fetch("./library.json")).json(), en: await (await fetch("./library_en.json")).json() };
+  let lib = libs.nb;
+  const programs = {};
+  const macros = {};
+  const forces = {};
+  const trends = {};
+  window.__saved = [];
+  window.__wsLog = [];
+  window.__wsMsgs = [];
+  window.__forces = forces;
+  window.__macros = macros;
+  const values = {};
+  const states = {
+    "sensor.romtemp": { entity_id: "sensor.romtemp", state: "22.8", attributes: { friendly_name: "Romtemperatur stue", unit_of_measurement: "°C" } },
+    "binary_sensor.vindu": { entity_id: "binary_sensor.vindu", state: "off", attributes: { friendly_name: "Vindu stue" } },
+    "climate.stue": { entity_id: "climate.stue", state: "heat", attributes: { friendly_name: "Varmepumpe stue", temperature: 21 } },
+    "light.gang": { entity_id: "light.gang", state: "off", attributes: { friendly_name: "Lys gang" } },
+    "number.vav_spjeld": { entity_id: "number.vav_spjeld", state: "40", attributes: { friendly_name: "VAV-spjeld møterom" } },
+  };
+  let subs = [];
+
+  // Same pin rules as blocks.macro_blockdef()
+  function macroDef(m) {
+    const pins = (kind) => {
+      const seen = new Set();
+      return m.nodes
+        .filter((n) => n.type === kind)
+        .sort((a, b) => (a.y || 0) - (b.y || 0) || (a.x || 0) - (b.x || 0))
+        .map((n) => ({ name: n.params.name, type: n.params.type || "num", default: kind === "macro_in" ? Number(n.params.default) || 0 : null, label: n.params.name }))
+        .filter((p) => p.name && !seen.has(p.name) && seen.add(p.name));
+    };
+    return { type: "macro:" + m.id, category: "macro", title: m.name, symbol: m.symbol || "M", description: m.description || "Makro",
+      inputs: pins("macro_in"), outputs: pins("macro_out"), params: [], dynamic: null, ha: null, width: 130 };
+  }
+  function library() {
+    return { categories: lib.categories, blocks: lib.blocks.concat(Object.values(macros).map(macroDef)) };
+  }
+  function defOf(type) {
+    return library().blocks.find((b) => b.type === type);
+  }
+
+  function snapshotFor(pid) {
+    const p = programs[pid];
+    if (!p) return { nodes: {}, running: false };
+    const nodes = {};
+    const order = {};
+    let i = 1;
+    const addNode = (id, n) => {
+      const def = defOf(n.type);
+      if (!def) return;
+      const o = {};
+      for (const port of def.outputs) {
+        if (port.type === "bool") o[port.name] = Math.random() > 0.5;
+        else if (port.type === "num") o[port.name] = Math.round(Math.random() * 3000) / 100;
+        else o[port.name] = "heat";
+      }
+      // Fixed values for screenshots (set by the page): {node id: {port: value}}
+      if (window.__demoValues && window.__demoValues[id]) Object.assign(o, window.__demoValues[id]);
+      const f = forces[pid] && forces[pid][id];
+      if (f) Object.assign(o, f);
+      nodes[id] = { o };
+      if (f) nodes[id].f = { ...f };
+      if (def.ha === "setpoint" || def.ha === "toggle") nodes[id].v = values[pid + ":" + id] ?? n.params.initial ?? 21;
+      order[id] = i++;
+      if (n.type.startsWith("macro:")) {
+        const m = macros[n.type.slice(6)];
+        if (m) for (const inner of m.nodes) addNode(id + "/" + inner.id, inner);
+      }
+    };
+    for (const n of p.nodes) addNode(n.id, n);
+    const first = p.nodes.find((n) => n.type === "entity_out");
+    if (first && !params.get("clean")) nodes[first.id].e = "Tjenesten light.turn_on feilet (test)";
+    const forced = Object.values(forces[pid] || {}).reduce((a, x) => a + Object.keys(x).length, 0);
+    return { nodes, running: p.enabled, scan: Math.floor(Math.random() * 1000), ms: 0.21, warnings: [], order, forced, t: Date.now() / 1000 };
+  }
+
+  const connection = {
+    async sendMessagePromise(msg) {
+      window.__wsLog.push(msg.type);
+      window.__wsMsgs.push(msg);
+      await new Promise((r) => setTimeout(r, 5));
+      switch (msg.type) {
+        case "fbd_logic/blocks":
+          lib = libs[msg.language] || libs.nb;
+          return library();
+        case "fbd_logic/programs":
+          return { programs: Object.values(programs).map((p) => ({ id: p.id, name: p.name, enabled: p.enabled, interval: p.interval, nodes: p.nodes.length, errors: 0, running: p.enabled })) };
+        case "fbd_logic/macros":
+          return { macros: Object.values(macros).map((m) => ({ id: m.id, name: m.name, symbol: m.symbol, used_by: [] })) };
+        case "fbd_logic/program/get":
+          if (!programs[msg.program_id]) throw { code: "not_found", message: "Programmet finnes ikke" };
+          return { program: JSON.parse(JSON.stringify(programs[msg.program_id])) };
+        case "fbd_logic/macro/get":
+          if (!macros[msg.macro_id]) throw { code: "not_found", message: "Makroen finnes ikke" };
+          return { macro: JSON.parse(JSON.stringify(macros[msg.macro_id])), used_by: [] };
+        case "fbd_logic/program/save": {
+          const p = JSON.parse(JSON.stringify(msg.program));
+          if (!p.name) throw { code: "invalid_format", message: "Ugyldig program: name" };
+          programs[p.id] = p;
+          window.__saved.push(JSON.parse(JSON.stringify(p)));
+          return { program: p, warnings: [] };
+        }
+        case "fbd_logic/macro/save": {
+          const m = JSON.parse(JSON.stringify(msg.macro));
+          if (!m.id) m.id = "m" + Math.random().toString(36).slice(2, 8);
+          macros[m.id] = m;
+          return { macro: m };
+        }
+        case "fbd_logic/macro/delete": delete macros[msg.macro_id]; return null;
+        case "fbd_logic/program/delete": delete programs[msg.program_id]; return null;
+        case "fbd_logic/set_value": values[msg.program_id + ":" + msg.node_id] = msg.value; return null;
+        case "fbd_logic/force": {
+          const f = (forces[msg.program_id] = forces[msg.program_id] || {});
+          if (msg.value === null) {
+            if (f[msg.node_id]) delete f[msg.node_id][msg.port];
+            if (f[msg.node_id] && !Object.keys(f[msg.node_id]).length) delete f[msg.node_id];
+          } else (f[msg.node_id] = f[msg.node_id] || {})[msg.port] = msg.value;
+          return { forces: f };
+        }
+        case "fbd_logic/force/clear": delete forces[msg.program_id]; return null;
+        case "fbd_logic/trend/get": return { signals: trends[msg.program_id] || [], data: {} };
+        case "fbd_logic/trend/set": {
+          trends[msg.program_id] = [...new Set(msg.signals)].slice(0, 8);
+          const now = Date.now() / 1000;
+          const data = {};
+          const demo = window.__demoTrend || {}; // {signal: (k) => value} for screenshots
+          for (const s of trends[msg.program_id]) data[s] = Array.from({ length: 120 }, (_, k) => [now - (120 - k) * 5, demo[s] ? demo[s](k) : s.endsWith("|q") ? k % 30 < 15 : 20 + Math.sin(k / 10) * 2]);
+          return { signals: trends[msg.program_id], data };
+        }
+        default: throw { code: "unknown", message: "unknown " + msg.type };
+      }
+    },
+    async subscribeMessage(cb, msg) {
+      window.__wsLog.push(msg.type);
+      const pid = msg.program_id;
+      const fire = () => cb(snapshotFor(pid));
+      fire();
+      const t = setInterval(fire, 300);
+      const entry = { pid, t };
+      subs.push(entry);
+      return async () => { clearInterval(t); subs = subs.filter((s) => s !== entry); };
+    },
+  };
+  window.__subs = () => subs.length;
+  window.__programs = programs;
+
+  const params = new URLSearchParams(location.search);
+  if (params.get("dark")) document.body.classList.add("dark");
+  if (params.get("preload")) {
+    const pre = await (await fetch("./" + params.get("preload"))).json();
+    programs[pre.id] = pre;
+  }
+  await import("/custom_components/fbd_logic/frontend/fbd-panel.js");
+  const el = document.createElement("fbd-logic-panel");
+  el.narrow = params.get("narrow") === "1";
+  // Same properties Home Assistant sets on custom panels
+  el.route = { prefix: "/fbd-logic", path: "" };
+  el.panel = { url_path: "fbd-logic", config: { version: "0.4.0" } };
+  const resolver = document.createElement("div");
+  resolver.className = "resolver";
+  const custom = document.createElement("div");
+  custom.className = "panel-custom";
+  custom.appendChild(el);
+  resolver.appendChild(custom);
+  document.body.appendChild(resolver);
+  el.hass = { states, connection, language: params.get("lang") || "nb", themes: { darkMode: !!params.get("dark") } };
+  window.__panel = el;
+</script>
+</body>
+</html>

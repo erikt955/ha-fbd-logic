@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.zip
+tests/ui/out/
+
+# Local notes for the AI assistant (personal details, not part of the project)
+CLAUDE.md
