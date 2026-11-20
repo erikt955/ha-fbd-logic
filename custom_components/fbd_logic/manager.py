@@ -66,6 +66,9 @@ LINK_SCHEMA = vol.Schema(
         vol.Required("from_port"): str,
         vol.Required("to"): str,
         vol.Required("to_port"): str,
+        # Hand-placed bend in the editor (drawing only, the engine ignores it)
+        vol.Optional("mx"): vol.Coerce(float),
+        vol.Optional("my"): vol.Coerce(float),
     },
     extra=vol.ALLOW_EXTRA,
 )

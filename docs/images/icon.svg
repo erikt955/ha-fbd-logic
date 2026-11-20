@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- FBD Logic icon: two function blocks joined by a wire. Source for custom_components/fbd_logic/brand/*.png -->
+  <rect x="8" y="8" width="240" height="240" rx="52" fill="#263238"/>
+  <g stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <!-- input stubs on the first block, output stub on the second -->
+    <path d="M24 92 H40 M24 124 H40" stroke="#90a4ae" stroke-width="8"/>
+    <path d="M216 148 H232" stroke="#90a4ae" stroke-width="8"/>
+    <!-- the wire, orthogonal like in the editor -->
+    <path d="M112 108 H128 V148 H144" stroke="#66bb6a" stroke-width="10"/>
+  </g>
+  <!-- block 1 -->
+  <rect x="40" y="56" width="72" height="92" rx="9" fill="#eceff1"/>
+  <path d="M40 65 a9 9 0 0 1 9 -9 H103 a9 9 0 0 1 9 9 V78 H40 Z" fill="#ff9800"/>
+  <!-- block 2 -->
+  <rect x="144" y="96" width="72" height="92" rx="9" fill="#eceff1"/>
+  <path d="M144 105 a9 9 0 0 1 9 -9 H207 a9 9 0 0 1 9 9 V118 H144 Z" fill="#03a9f4"/>
+  <!-- pin dots -->
+  <g fill="#66bb6a">
+    <circle cx="112" cy="108" r="7"/>
+    <circle cx="144" cy="148" r="7"/>
+  </g>
+  <g fill="#90a4ae">
+    <circle cx="40" cy="92" r="6"/>
+    <circle cx="40" cy="124" r="6"/>
+    <circle cx="216" cy="148" r="6"/>
+  </g>
+</svg>

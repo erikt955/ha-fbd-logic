@@ -227,8 +227,8 @@ async def test_pages_roundtrip(hass: HomeAssistant, hass_ws_client) -> None:
             {"id": "pub", "type": "publish", "page": "b", "x": 150, "params": {"name": "Verdi"}},
         ],
         "links": [
-            {"id": "1", "from": "k", "from_port": "out", "to": "tx", "to_port": "value"},
-            {"id": "2", "from": "rx", "from_port": "value", "to": "pub", "to_port": "value"},
+            {"id": "1", "from": "k", "from_port": "out", "to": "tx", "to_port": "value", "mx": 120},
+            {"id": "2", "from": "rx", "from_port": "value", "to": "pub", "to_port": "value", "my": 90},
         ],
     }
     res = await _ws(client, {"type": "fbd_logic/program/save", "program": prog})
@@ -237,5 +237,8 @@ async def test_pages_roundtrip(hass: HomeAssistant, hass_ws_client) -> None:
     res = await _ws(client, {"type": "fbd_logic/program/get", "program_id": "pg"})
     assert res["result"]["program"]["pages"][1]["name"] == "Ut"
     assert res["result"]["program"]["nodes"][2]["page"] == "b"
+    # Hand-placed wire bends are kept as drawn
+    links = {l["id"]: l for l in res["result"]["program"]["links"]}
+    assert links["1"]["mx"] == 120 and links["2"]["my"] == 90
     sensor = er.async_get(hass).async_get_entity_id("sensor", DOMAIN, "pg_pub")
     assert hass.states.get(sensor).state == "5.0"

@@ -38,6 +38,7 @@ Krever Home Assistant 2024.8 eller nyere. Testet mot 2026.2 og 2026.11.
 
 - **Legg til blokker**: dra dem fra paletten til venstre, eller trykk på dem.
 - **Koble**: dra fra en utgang (høyre side) til en inngang (venstre side), eller motsatt. En inngang kan bare ha én tråd, så en ny tråd erstatter den gamle. Dra i en tilkoblet inngang for å flytte tråden.
+- **Ryddige tråder**: pinnene ligger på rutenettet, så en utgang og en inngang kan alltid legges på linje for en rett tråd. Velg en tråd og dra i knekken for å flytte den; dobbeltklikk på tråden for automatisk føring igjen.
 - **Konstanter**: innganger uten tråd får en fast verdi. Den settes i egenskapspanelet og vises grått ved pinnen.
 - **Lagre** (Ctrl+S) validerer programmet og laster det inn med en gang. Blokker som ikke er endret, beholder tilstanden sin (online-endring).
 - **Online** viser live-verdier på alle utganger. Av/på-tråder blir grønne når de er på. Blokker med feil får rød ramme, og feilen vises i egenskapspanelet.

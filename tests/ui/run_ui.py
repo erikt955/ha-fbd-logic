@@ -545,6 +545,64 @@ try:
         check(not leftovers, f"no Norwegian letters in the English panel ({leftovers})")
         page.screenshot(path=str(OUT / "16_english.png"))
 
+        # ------------------------------------------------------------ grid and wire bends
+        print("17. Pins on the grid, movable wire bends")
+        off_grid = page.evaluate(
+            """() => { const p = window.__panel; const bad = [];
+            for (const type of Object.keys(p._blocks)) {
+              const g = p._geom({ id: 'g', type, x: 0, y: 0, params: {} });
+              for (const pin of [...g.ins, ...g.outs]) if (pin.py % 10) bad.push(type + '.' + pin.name + '=' + pin.py);
+            }
+            return bad; }"""
+        )
+        check(not off_grid, f"every pin of every block lies on the 10 px grid ({off_grid[:5]})")
+        page.evaluate(
+            """() => { const p = window.__panel;
+            p._prog.nodes = []; p._prog.links = []; p._sel = new Set();
+            p._prog.nodes.push({ id: 'k1', type: 'const_num', x: 100, y: 300, params: { value: 5 }, page: p._page },
+                               { id: 'g1', type: 'gt', x: 400, y: 400, params: {}, page: p._page },
+                               { id: 'g2', type: 'gt', x: 400, y: 300, params: {}, page: p._page });
+            p._prog.links.push({ id: 'w1', from: 'k1', from_port: 'out', to: 'g1', to_port: 'a' },
+                               { id: 'w2', from: 'k1', from_port: 'out', to: 'g2', to_port: 'a' });
+            // place g2 so its first input is level with the constant's output
+            const k1 = p._geom(p._node('k1')).outs[0].py, g2 = p._node('g2');
+            g2.y += k1 - p._geom(g2).ins[0].py;
+            p._view = { x: 0, y: 0, k: 1 }; p._render(); }"""
+        )
+        check(page.evaluate("() => window.__panel._node('g2').y % 10") == 0, "a level pin is reachable with the block on the grid")
+        page.wait_for_timeout(100)
+        straight = page.evaluate("() => window.__panel._wireSeg(window.__panel._prog.links.find(l => l.id === 'w2'))")
+        check(straight is None, "level pins give a straight wire (no bend)")
+        seg = page.evaluate("() => window.__panel._wireSeg(window.__panel._prog.links.find(l => l.id === 'w1'))")
+        svg = page.evaluate("() => { const r = window.__panel.$svg.getBoundingClientRect(); return { x: r.x, y: r.y }; }")
+        sx, sy = svg["x"] + seg["x"], svg["y"] + seg["y"]
+        page.mouse.move(sx, sy)
+        page.mouse.down()
+        page.mouse.move(sx + 23, sy, steps=4)
+        page.mouse.up()
+        page.wait_for_timeout(150)
+        mx = page.evaluate("() => window.__panel._prog.links.find(l => l.id === 'w1').mx")
+        check(mx is not None and mx % 10 == 0 and abs(mx - (seg["x"] + 23)) <= 5, f"dragging the bend moves it, snapped to the grid ({seg['x']} → {mx})")
+        check(root.locator(".seg-handle").count() == 1, "the selected wire shows a grip on its bend")
+        check(root.locator('.props [data-act="reset-route"]').count() == 1, "properties offer automatic routing")
+        # moving both blocks together moves the bend along
+        page.evaluate(
+            """() => { const p = window.__panel; p._sel = new Set(['k1', 'g1']); }"""
+        )
+        g1 = box('[data-node="g1"] .blk-body')
+        page.mouse.move(g1["x"] + 30, g1["y"] + 10)
+        page.mouse.down()
+        page.mouse.move(g1["x"] + 70, g1["y"] + 10, steps=4)
+        page.mouse.up()
+        page.wait_for_timeout(150)
+        mx2 = page.evaluate("() => window.__panel._prog.links.find(l => l.id === 'w1').mx")
+        check(mx2 == mx + 40, f"the bend moves with both blocks ({mx} → {mx2})")
+        seg2 = page.evaluate("() => window.__panel._wireSeg(window.__panel._prog.links.find(l => l.id === 'w1'))")
+        page.mouse.dblclick(svg["x"] + seg2["x"], svg["y"] + seg2["y"])
+        page.wait_for_timeout(150)
+        check(page.evaluate("() => 'mx' in window.__panel._prog.links.find(l => l.id === 'w1')") is False, "double-click resets automatic routing")
+        page.screenshot(path=str(OUT / "17_wires.png"))
+
         browser.close()
 finally:
     server.terminate()

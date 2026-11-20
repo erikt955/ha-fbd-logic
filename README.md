@@ -46,6 +46,7 @@ Requires Home Assistant 2024.8 or newer. Tested with 2026.2 and 2026.11.
 
 - **Add blocks**: drag them from the palette on the left, or tap them.
 - **Connect**: drag from an output (right side) to an input (left side), or the other way. An input has one wire, so a new wire replaces the old one. Drag a connected input to move its wire.
+- **Tidy wires**: pins lie on the grid, so an output and an input can always be put level for a straight wire. Select a wire and drag its bend to move it; double-click the wire for automatic routing again.
 - **Constants**: an input without a wire gets a fixed value. Set it in the properties panel; it is shown in grey next to the pin.
 - **Save** (Ctrl+S) checks the program and loads it at once. Blocks that have not changed keep their state (online change).
 - **Online** shows live values on all outputs. On/off wires turn green when on. A block with an error gets a red frame, and the error is shown in the properties panel.

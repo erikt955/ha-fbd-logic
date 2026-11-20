@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.0
+
+- **Wire bends can be moved.** Select a wire and drag its bend (the vertical segment, or the lower one for a wire going backwards). The bend snaps to the grid, is saved with the program and moves along when both blocks are moved together. Double-click the wire, or press “Automatic routing”, to reset it.
+- **Pins lie on the grid.** Header, info line and pin rows are 20 px, so every pin is on the grid and an output and an input can always be put level for a straight wire. Blocks become slightly taller.
+- **Icon.** The integration ships its own icon (`brand/`), shown in HA 2026.3 and later.
+
 ## 0.4.1
 
 - New block **Rate limiter** (`RATE`, Control): limits how fast a value may change, with separate rates up and down (0 = unlimited in that direction), an enable input that bypasses it, and a `limiting` output. The output is kept over a restart.

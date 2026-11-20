@@ -2,11 +2,13 @@
  * Plain web component, no build step. Talks to the backend over the
  * HA websocket API (fbd_logic/*).
  */
-const FBD_VERSION = "0.4.1";
+const FBD_VERSION = "0.5.0";
 const GRID = 10;
-const ROW = 18;
-const HEAD = 22;
-const INFO = 16;
+// Header, info line and pin rows are whole multiples of GRID, so every pin lies on the
+// grid and pins on blocks at the same height line up for a straight wire.
+const ROW = 20;
+const HEAD = 20;
+const INFO = 20;
 const STUB = 8;
 
 const CAT_COLORS = {
@@ -186,6 +188,9 @@ const EN = {
   "Tråd": "Wire",
   "Verdi:": "Value:",
   "Slett tråd": "Delete wire",
+  "Automatisk føring": "Automatic routing",
+  "Dra knekken på tråden for å flytte den. Dobbeltklikk på tråden for automatisk føring.": "Drag the bend of the wire to move it. Double-click the wire for automatic routing.",
+  "Dra for å flytte knekken. Dobbeltklikk for automatisk føring.": "Drag to move the bend. Double-click for automatic routing.",
   "Legg i trend": "Add to trend",
   "{n} blokker valgt": "{n} blocks selected",
   "Dra for å flytte. Ctrl+C / Ctrl+V for å kopiere, Delete for å slette.": "Drag to move. Ctrl+C / Ctrl+V to copy, Delete to delete.",
@@ -287,6 +292,14 @@ const esc = (s) =>
   String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const uid = (p) => p + Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-4);
 const snapG = (v) => Math.round(v / GRID) * GRID;
+// A wire's hand-placed bend: mx = x of the vertical segment (forward wire), my = y of the
+// lower horizontal segment (wire going backwards). Returns the fields moved by dx/dy.
+const routeShift = (l, dx, dy) => {
+  const r = {};
+  if (typeof l.mx === "number") r.mx = l.mx + dx;
+  if (typeof l.my === "number") r.my = l.my + dy;
+  return r;
+};
 const clone = (o) => JSON.parse(JSON.stringify(o));
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
@@ -441,6 +454,9 @@ svg.canvas { width:100%; height:100%; display:block; touch-action:none; user-sel
 .wire.sel { stroke:var(--fbd-accent) !important; stroke-width:3; }
 .wire-hit { fill:none; stroke:transparent; stroke-width:10; cursor:pointer; }
 .wire.temp { stroke:var(--fbd-accent); stroke-dasharray:4 3; pointer-events:none; }
+.seg-handle { fill:var(--fbd-accent); stroke:var(--card-background-color,#fff); stroke-width:1.5; }
+.seg-handle.ax-x { cursor:ew-resize; }
+.seg-handle.ax-y { cursor:ns-resize; }
 .boxsel { fill:rgba(3,169,244,.08); stroke:var(--fbd-accent); stroke-dasharray:4 3; pointer-events:none; }
 .cmt-body { fill:#fff7c2; stroke:#d4b200; stroke-width:1; }
 .blk.sel .cmt-body { stroke:var(--fbd-accent); stroke-width:2; }
@@ -1168,6 +1184,9 @@ class FbdLogicPanel extends HTMLElement {
       case "del-link":
         this._deleteSelection();
         break;
+      case "reset-route":
+        this._resetRoute(this._selLink);
+        break;
       case "set-live": {
         const nid = btn.dataset.node;
         const input = this.$props.querySelector(`[data-liveinput="${CSS.escape(nid)}"]`);
@@ -1595,7 +1614,7 @@ class FbdLogicPanel extends HTMLElement {
       this._prog.nodes.push(c);
     }
     for (const l of this._clip.links) {
-      this._prog.links.push({ id: uid("l"), from: map[l.from], from_port: l.from_port, to: map[l.to], to_port: l.to_port });
+      this._prog.links.push({ id: uid("l"), from: map[l.from], from_port: l.from_port, to: map[l.to], to_port: l.to_port, ...routeShift(l, 30, 30) });
     }
     for (const n of this._clip.nodes) {
       n.x += 30;
@@ -1646,10 +1665,10 @@ class FbdLogicPanel extends HTMLElement {
     const infoH = info !== null ? INFO : 0;
     const rows = Math.max(ins.length, outs.length, 1);
     const top = y + HEAD + infoH;
-    const h = HEAD + infoH + rows * ROW + 4;
+    const h = HEAD + infoH + rows * ROW;
     const mk = (p, i, dir) => ({
       ...p,
-      py: top + ROW * i + ROW / 2 + 2,
+      py: top + ROW * i + ROW / 2,
       cx: dir === "in" ? x - STUB : x + w + STUB,
     });
     return { x, y, w, h, def, info, ins: ins.map((p, i) => mk(p, i, "in")), outs: outs.map((p, i) => mk(p, i, "out")) };
@@ -1735,13 +1754,52 @@ class FbdLogicPanel extends HTMLElement {
     return `${days(first.days || [])} ${first.on}–${first.off}${more}`;
   }
 
-  _route(x1, y1, x2, y2, bottom) {
+  _route(x1, y1, x2, y2, bottom, l) {
     if (x2 >= x1 + 4) {
-      const mx = Math.round((x1 + x2) / 2 / 5) * 5;
+      const mx = this._wireMx(x1, x2, l);
       return `M${x1},${y1} H${mx} V${y2} H${x2}`;
     }
-    const yc = bottom + 14;
+    const yc = this._wireYc(bottom, l);
     return `M${x1},${y1} H${x1 + 10} V${yc} H${x2 - 10} V${y2} H${x2}`;
+  }
+
+  // x of the vertical segment: the hand-placed one while it still lies between the pins.
+  _wireMx(x1, x2, l) {
+    if (l && typeof l.mx === "number" && l.mx >= x1 && l.mx <= x2) return l.mx;
+    return Math.round((x1 + x2) / 2 / 5) * 5;
+  }
+
+  _wireYc(bottom, l) {
+    return l && typeof l.my === "number" ? l.my : bottom + 14;
+  }
+
+  // Pin coordinates of a wire whose both ends are on the current page, else null.
+  _wireGeom(l) {
+    const a = this._node(l.from);
+    const b = this._node(l.to);
+    if (!a || !b) return null;
+    const vis = new Set(this._visible().map((n) => n.id));
+    if (!vis.has(a.id) || !vis.has(b.id)) return null;
+    const ga = this._geom(a);
+    const gb = this._geom(b);
+    const op = ga.outs.find((p) => p.name === l.from_port);
+    const ip = gb.ins.find((p) => p.name === l.to_port);
+    if (!op || !ip) return null;
+    return { x1: op.cx, y1: op.py, x2: ip.cx, y2: ip.py, bottom: Math.max(ga.y + ga.h, gb.y + gb.h) };
+  }
+
+  // The draggable segment of a wire: the vertical one (axis x) or, for a wire going
+  // backwards, the lower horizontal one (axis y). Null for a straight wire.
+  _wireSeg(l) {
+    const g = this._wireGeom(l);
+    if (!g) return null;
+    if (g.x2 >= g.x1 + 4) {
+      if (g.y1 === g.y2) return null;
+      const x = this._wireMx(g.x1, g.x2, l);
+      return { axis: "x", x, y: (g.y1 + g.y2) / 2, y1: Math.min(g.y1, g.y2), y2: Math.max(g.y1, g.y2), min: g.x1, max: g.x2 };
+    }
+    const y = this._wireYc(g.bottom, l);
+    return { axis: "y", x: (g.x1 + g.x2) / 2, y, x1: g.x2 - 10, x2: g.x1 + 10 };
   }
 
   _toWorld(cx, cy) {
@@ -1858,6 +1916,8 @@ class FbdLogicPanel extends HTMLElement {
     const portEl = t.closest && t.closest("[data-port]");
     const nodeEl = t.closest && t.closest("[data-node]");
     const linkEl = t.closest && t.closest("[data-link]");
+    // dblclick is targeted at the svg (pointer capture), so remember the wire pressed last.
+    this._linkDown = linkEl && !portEl && !nodeEl ? linkEl.dataset.link : null;
     if (portEl) {
       const [nid, dir, port] = portEl.dataset.port.split("|");
       if (dir === "in") {
@@ -1891,16 +1951,35 @@ class FbdLogicPanel extends HTMLElement {
         const n = this._node(id);
         if (n) orig.set(id, { x: n.x, y: n.y });
       }
-      this._drag = { mode: "move", start: w, orig, moved: false, nid, additive };
+      // Hand-placed bends of wires between moved blocks move along with them.
+      const origLinks = new Map();
+      for (const l of this._prog.links) {
+        if (orig.has(l.from) && orig.has(l.to) && (typeof l.mx === "number" || typeof l.my === "number")) origLinks.set(l, { mx: l.mx, my: l.my });
+      }
+      this._drag = { mode: "move", start: w, orig, origLinks, moved: false, nid, additive };
       this._renderProps();
       this._scheduleRender();
       return;
     }
     if (linkEl) {
-      this._selLink = linkEl.dataset.link;
+      const lid = linkEl.dataset.link;
+      const changed = this._selLink !== lid;
+      this._selLink = lid;
       this._sel = new Set();
       this._drag = null;
-      this._renderProps();
+      const l = this._prog.links.find((x) => x.id === lid);
+      const seg = l && this._wireSeg(l);
+      if (seg) {
+        // Pressing on the bend itself (or its grip) starts moving it.
+        const tol = Math.max(6, 8 / this._view.k);
+        const onSeg =
+          linkEl.dataset.seg ||
+          (seg.axis === "x"
+            ? Math.abs(w.x - seg.x) <= tol && w.y >= seg.y1 - tol && w.y <= seg.y2 + tol
+            : Math.abs(w.y - seg.y) <= tol && w.x >= seg.x1 - tol && w.x <= seg.x2 + tol);
+        if (onSeg) this._drag = { mode: "seg", lid, axis: seg.axis, min: seg.min, max: seg.max, moved: false };
+      }
+      if (changed || !this._drag) this._renderProps();
       this._scheduleRender();
       return;
     }
@@ -1953,6 +2032,7 @@ class FbdLogicPanel extends HTMLElement {
             n.y = o.y + dy;
           }
         }
+        for (const [l, o] of d.origLinks) Object.assign(l, routeShift(o, dx, dy));
         this._dirty = true;
       }
     } else if (d.mode === "link") {
@@ -1961,6 +2041,21 @@ class FbdLogicPanel extends HTMLElement {
       d.hot = this._hitPort(w, d.dir === "out" ? "in" : "out");
     } else if (d.mode === "box") {
       d.cur = w;
+    } else if (d.mode === "seg") {
+      const l = this._prog.links.find((x) => x.id === d.lid);
+      if (!l) return;
+      const key = d.axis === "x" ? "mx" : "my";
+      let v = snapG(d.axis === "x" ? w.x : w.y);
+      if (d.axis === "x") v = clamp(v, d.min, d.max);
+      const cur = d.axis === "x" ? this._wireSeg(l)?.x : this._wireSeg(l)?.y;
+      if (v !== cur) {
+        if (!d.moved) {
+          d.moved = true;
+          this._pushUndo();
+        }
+        l[key] = v;
+        this._dirty = true;
+      }
     }
     this._scheduleRender();
   }
@@ -2006,6 +2101,9 @@ class FbdLogicPanel extends HTMLElement {
       }
       this._selLink = null;
       this._renderProps();
+    } else if (d.mode === "seg") {
+      if (d.moved) this._markDirty();
+      this._renderProps();
     } else if (d.mode === "move") {
       if (d.moved) this._markDirty();
       else if (!d.additive && this._sel.size > 1) {
@@ -2040,6 +2138,10 @@ class FbdLogicPanel extends HTMLElement {
   }
 
   _onDblClick(e) {
+    if (this._linkDown) {
+      this._resetRoute(this._linkDown);
+      return;
+    }
     const hit = this._nodeAt(this._toWorld(e.clientX, e.clientY));
     if (hit) {
       this._sel = new Set([hit.id]);
@@ -2056,6 +2158,18 @@ class FbdLogicPanel extends HTMLElement {
       const s = this.$palette.querySelector(".search");
       if (s) s.focus();
     }
+  }
+
+  // Back to automatic routing for a wire with a hand-placed bend.
+  _resetRoute(lid) {
+    const l = this._prog && this._prog.links.find((x) => x.id === lid);
+    if (!l || (typeof l.mx !== "number" && typeof l.my !== "number")) return;
+    this._pushUndo();
+    delete l.mx;
+    delete l.my;
+    this._markDirty();
+    this._renderProps();
+    this._scheduleRender();
   }
 
   _onKey(e) {
@@ -2168,8 +2282,8 @@ class FbdLogicPanel extends HTMLElement {
       const ip = gs2.ins.find((p) => p.name === l.to_port);
       if (!op || !ip) continue;
       const bottom = Math.max(gs1.y + gs1.h, gs2.y + gs2.h);
-      const d = this._route(op.cx, op.py, ip.cx, ip.py, bottom);
-      const sv = snapNodes[l.from] && snapNodes[l.from].o ? snapNodes[l.from].o[l.from_port] : undefined;
+      const d = this._route(op.cx, op.py, ip.cx, ip.py, bottom, l);
+      const sv =snapNodes[l.from] && snapNodes[l.from].o ? snapNodes[l.from].o[l.from_port] : undefined;
       const cls = this._wireClass(op.type, sv, l.id === this._selLink);
       wires.push(
         `<path class="wire-hit" data-link="${esc(l.id)}" d="${d}"></path><path class="${cls}" data-wv="${esc(l.from)}|${esc(l.from_port)}" data-wt="${op.type}"${l.id === this._selLink ? ' data-sel="1"' : ""} d="${d}" pointer-events="none"></path>`
@@ -2182,6 +2296,13 @@ class FbdLogicPanel extends HTMLElement {
     }
 
     let overlay = "";
+    const selL = this._selLink && this._prog.links.find((x) => x.id === this._selLink);
+    const seg = selL && this._wireSeg(selL);
+    if (seg) {
+      // Grip on the bend of the selected wire: drag to move it, double-click to reset.
+      const [hw, hh] = seg.axis === "x" ? [8, 16] : [16, 8];
+      overlay += `<rect class="seg-handle ax-${seg.axis}" data-link="${esc(selL.id)}" data-seg="1" x="${seg.x - hw / 2}" y="${seg.y - hh / 2}" width="${hw}" height="${hh}" rx="2"><title>${esc(t("Dra for å flytte knekken. Dobbeltklikk for automatisk føring."))}</title></rect>`;
+    }
     const d = this._drag;
     if (d && d.mode === "link") {
       const g = geoms.get(d.nid);
@@ -2311,15 +2432,15 @@ class FbdLogicPanel extends HTMLElement {
     if (n.label) parts.push(`<text class="blk-label" x="${x}" y="${y - 5}">${esc(trunc(n.label, 40))}</text>`);
     parts.push(`<rect class="blk-body" x="${x}" y="${y}" width="${w}" height="${h}" rx="4"></rect>`);
     parts.push(`<path d="M${x},${y + 4} a4,4 0 0 1 4,-4 H${x + w - 4} a4,4 0 0 1 4,4 V${y + HEAD} H${x} Z" fill="${color}"></path>`);
-    parts.push(`<text class="blk-head-t" x="${x + 6}" y="${y + 15}">${esc(def.symbol)}<tspan data-errmark="1">${err ? " ⚠" : ""}</tspan></text>`);
-    parts.push(`<text class="blk-ord" data-ord="1" x="${x + w - 5}" y="${y + 14}" text-anchor="end">${ord ? "#" + ord : ""}</text>`);
+    parts.push(`<text class="blk-head-t" x="${x + 6}" y="${y + 14}">${esc(def.symbol)}<tspan data-errmark="1">${err ? " ⚠" : ""}</tspan></text>`);
+    parts.push(`<text class="blk-ord" data-ord="1" x="${x + w - 5}" y="${y + 13}" text-anchor="end">${ord ? "#" + ord : ""}</text>`);
     if (g.info !== null && g.info !== undefined) {
       const maxc = this._infoMax(w);
       let info = g.info;
       const live = n.type === "setpoint" || n.type === "toggle";
       if (live && sn && sn.v !== undefined && sn.v !== null) info = `${info}: ${fmt(sn.v)}`;
       const extra = live ? ` data-infobase="${esc(g.info)}" data-max="${maxc}"` : "";
-      parts.push(`<text class="blk-info"${extra} x="${x + 5}" y="${y + HEAD + 12}">${esc(trunc(info, maxc))}</text>`);
+      parts.push(`<text class="blk-info"${extra} x="${x + 5}" y="${y + HEAD + 14}">${esc(trunc(info, maxc))}</text>`);
     }
     for (const p of g.ins) {
       const linked = this._linkTo(n.id, p.name);
@@ -2567,7 +2688,8 @@ class FbdLogicPanel extends HTMLElement {
         this.$props.innerHTML = `<h3>${t("Tråd")}</h3>
           <div class="desc">${esc(a?.label || an)}.<b>${esc(l.from_port)}</b> → ${esc(b?.label || bn)}.<b>${esc(l.to_port)}</b></div>
           <div class="row">${t("Verdi:")} <span class="live" data-live="${esc(l.from)}|o|${esc(l.from_port)}">–</span></div>
-          <div class="btns"><button class="danger" data-act="del-link">${t("Slett tråd")}</button>${canTrend ? `<button data-act="trend-add" data-sig="${esc(sig)}">📈 ${t("Legg i trend")}</button>` : ""}</div>`;
+          ${this._wireSeg(l) ? `<div class="hint">${t("Dra knekken på tråden for å flytte den. Dobbeltklikk på tråden for automatisk føring.")}</div>` : ""}
+          <div class="btns"><button class="danger" data-act="del-link">${t("Slett tråd")}</button>${typeof l.mx === "number" || typeof l.my === "number" ? `<button data-act="reset-route">${t("Automatisk føring")}</button>` : ""}${canTrend ? `<button data-act="trend-add" data-sig="${esc(sig)}">📈 ${t("Legg i trend")}</button>` : ""}</div>`;
         this._applySnapshot();
         return;
       }
