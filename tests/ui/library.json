@@ -2190,6 +2190,57 @@
    "width": 100
   },
   {
+   "type": "ratelimit",
+   "category": "control",
+   "title": "Endringsbegrenser",
+   "symbol": "RATE",
+   "description": "Begrenser hvor fort utgangen kan endre seg: maks 'opp' enheter per sekund oppover og 'ned' per sekund nedover (0 = ubegrenset i den retningen). Når aktiv er av, følger utgangen inngangen direkte. 'begrenser' er på mens utgangen henger etter. Huskes over omstart.",
+   "inputs": [
+    {
+     "name": "in",
+     "type": "num",
+     "default": 0,
+     "label": "in"
+    },
+    {
+     "name": "up",
+     "type": "num",
+     "default": 1,
+     "label": "opp/s"
+    },
+    {
+     "name": "down",
+     "type": "num",
+     "default": 1,
+     "label": "ned/s"
+    },
+    {
+     "name": "en",
+     "type": "bool",
+     "default": true,
+     "label": "aktiv"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "out",
+     "type": "num",
+     "default": null,
+     "label": "out"
+    },
+    {
+     "name": "lim",
+     "type": "bool",
+     "default": null,
+     "label": "begrenser"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 110
+  },
+  {
    "type": "pt1",
    "category": "control",
    "title": "Lavpassfilter",

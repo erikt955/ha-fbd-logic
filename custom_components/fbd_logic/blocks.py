@@ -1563,6 +1563,47 @@ register(
 )
 
 
+def _ratelimit(ctx, i, p, s):
+    target = i["in"]
+    if not i["en"]:
+        s["out"] = target
+        return {"out": target, "lim": False}
+    cur = s.get("out", target)
+    up, down = abs(i["up"]), abs(i["down"])
+    if target > cur:
+        cur = target if up <= 0 else min(target, cur + up * ctx.dt)
+    elif target < cur:
+        cur = target if down <= 0 else max(target, cur - down * ctx.dt)
+    s["out"] = cur
+    return {"out": cur, "lim": cur != target}
+
+
+register(
+    BlockDef(
+        type="ratelimit",
+        category="control",
+        title="Endringsbegrenser",
+        symbol="RATE",
+        description=(
+            "Begrenser hvor fort utgangen kan endre seg: maks 'opp' enheter per sekund oppover "
+            "og 'ned' per sekund nedover (0 = ubegrenset i den retningen). Når aktiv er av, "
+            "følger utgangen inngangen direkte. 'begrenser' er på mens utgangen henger etter. "
+            "Huskes over omstart."
+        ),
+        inputs=[
+            Port("in", NUM, 0),
+            Port("up", NUM, 1, "opp/s"),
+            Port("down", NUM, 1, "ned/s"),
+            Port("en", BOOL, True, "aktiv"),
+        ],
+        outputs=[Port("out", NUM), Port("lim", BOOL, label="begrenser")],
+        fn=_ratelimit,
+        retain=("out",),
+        width=110,
+    )
+)
+
+
 def _pt1(ctx, i, p, s):
     x, tau = i["in"], max(0.0, i["tau"])
     y = s.get("y", x)

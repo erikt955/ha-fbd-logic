@@ -2190,6 +2190,57 @@
    "width": 100
   },
   {
+   "type": "ratelimit",
+   "category": "control",
+   "title": "Rate limiter",
+   "symbol": "RATE",
+   "description": "Limits how fast the output can change: at most 'up' units per second upwards and 'down' per second downwards (0 = unlimited in that direction). When enable is off, the output follows the input directly. 'limiting' is on while the output lags behind. Kept over a restart.",
+   "inputs": [
+    {
+     "name": "in",
+     "type": "num",
+     "default": 0,
+     "label": "in"
+    },
+    {
+     "name": "up",
+     "type": "num",
+     "default": 1,
+     "label": "up/s"
+    },
+    {
+     "name": "down",
+     "type": "num",
+     "default": 1,
+     "label": "down/s"
+    },
+    {
+     "name": "en",
+     "type": "bool",
+     "default": true,
+     "label": "enable"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "out",
+     "type": "num",
+     "default": null,
+     "label": "out"
+    },
+    {
+     "name": "lim",
+     "type": "bool",
+     "default": null,
+     "label": "limiting"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 110
+  },
+  {
    "type": "pt1",
    "category": "control",
    "title": "Low-pass filter",

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.1
+
+- New block **Rate limiter** (`RATE`, Control): limits how fast a value may change, with separate rates up and down (0 = unlimited in that direction), an enable input that bypasses it, and a `limiting` output. The output is kept over a restart.
+
 ## 0.4.0
 
 - **English.** The panel and the blocks follow the language of the HA user: Norwegian for nb/nn, English for every other language. Warnings, block errors and entity names follow HA's system language.

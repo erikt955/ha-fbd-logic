@@ -389,6 +389,46 @@ def test_ramp_and_pt1():
     assert p.nodes["f"].outputs["out"] == 10
 
 
+def test_ratelimit_separate_up_down_and_bypass():
+    p = prog([n("r", "ratelimit", consts={"in": 10, "up": 2, "down": 5})])
+    p.step(0)
+    assert p.nodes["r"].outputs == {"out": 10, "lim": False}  # first scan: start at the input
+    p.nodes["r"].consts["in"] = 20
+    p.step(1)
+    assert p.nodes["r"].outputs == {"out": 12, "lim": True}
+    p.step(3)
+    assert p.nodes["r"].outputs["out"] == 16
+    p.nodes["r"].consts["in"] = 0
+    p.step(4)
+    assert p.nodes["r"].outputs["out"] == 11  # faster downwards
+    p.step(10)
+    assert p.nodes["r"].outputs == {"out": 0, "lim": False}
+    # 0 = unlimited upwards
+    p.nodes["r"].consts["up"] = 0
+    p.nodes["r"].consts["in"] = 50
+    p.step(11)
+    assert p.nodes["r"].outputs["out"] == 50
+    # disabled: follows the input at once
+    p.nodes["r"].consts["en"] = False
+    p.nodes["r"].consts["in"] = -30
+    p.step(12)
+    assert p.nodes["r"].outputs == {"out": -30, "lim": False}
+    assert p.retained_state()["r"]["s"] == {"out": -30}
+
+
+def test_ratelimit_keeps_value_over_restart():
+    p = prog([n("r", "ratelimit", consts={"in": 0, "up": 1})])
+    p.step(0)
+    p.nodes["r"].consts["in"] = 100
+    p.step(5)
+    retained = p.retained_state()
+    p2 = Program({"id": "p1", "nodes": [n("r", "ratelimit", consts={"in": 100, "up": 1})], "links": []}, io=FakeIO(), retained=retained)
+    p2.step(100)  # dt is 0 on the first scan: no jump to the input
+    assert p2.nodes["r"].outputs["out"] == 5
+    p2.step(102)
+    assert p2.nodes["r"].outputs["out"] == 7
+
+
 # ---------------------------------------------------------------- HA io blocks
 def test_entity_in_invalid_handling():
     io = FakeIO()

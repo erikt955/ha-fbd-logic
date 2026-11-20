@@ -1,7 +1,7 @@
 """Constants for FBD Logic."""
 
 DOMAIN = "fbd_logic"
-VERSION = "0.4.0"
+VERSION = "0.4.1"
 
 STORAGE_VERSION = 1
 STORAGE_KEY = f"{DOMAIN}.programs"

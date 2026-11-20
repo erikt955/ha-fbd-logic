@@ -309,6 +309,15 @@ EN: dict[str, str] = {
     ),
     "Rampe": "Ramp",
     "Utgangen følger inngangen med maks endring 'rate' per sekund.": "The output follows the input with at most 'rate' change per second.",
+    "Endringsbegrenser": "Rate limiter",
+    "Begrenser hvor fort utgangen kan endre seg: maks 'opp' enheter per sekund oppover og 'ned' per sekund nedover (0 = ubegrenset i den retningen). Når aktiv er av, følger utgangen inngangen direkte. 'begrenser' er på mens utgangen henger etter. Huskes over omstart.": (
+        "Limits how fast the output can change: at most 'up' units per second upwards and 'down' "
+        "per second downwards (0 = unlimited in that direction). When enable is off, the output "
+        "follows the input directly. 'limiting' is on while the output lags behind. Kept over a restart."
+    ),
+    "opp/s": "up/s",
+    "ned/s": "down/s",
+    "begrenser": "limiting",
     "Lavpassfilter": "Low-pass filter",
     "Førsteordens filter med tidskonstant tau (sekunder).": "First-order filter with time constant tau (seconds).",
     # ------------------------------------------------------------------ macros

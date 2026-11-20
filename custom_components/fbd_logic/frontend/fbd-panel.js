@@ -2,7 +2,7 @@
  * Plain web component, no build step. Talks to the backend over the
  * HA websocket API (fbd_logic/*).
  */
-const FBD_VERSION = "0.4.0";
+const FBD_VERSION = "0.4.1";
 const GRID = 10;
 const ROW = 18;
 const HEAD = 22;
