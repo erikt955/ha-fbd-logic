@@ -105,6 +105,39 @@ def test_astro_uses_ha_location_and_reports_missing():
     assert "posisjon" in (p.nodes["a"].error or "")
 
 
+def astro_at(params, consts, when):
+    node = {"id": "a", "type": "astro", "params": params, "consts": consts}
+    p = Program({"id": "p", "name": "t", "nodes": [node], "links": []}, io=IO())
+    p.step(0, when)
+    return p.nodes["a"].outputs
+
+
+def test_astro_offsets_shift_day():
+    # Oslo 21 Dec: sunrise 09:18, sunset 15:12
+    dec = lambda h, m: datetime(2024, 12, 21, h, m, tzinfo=CET)  # noqa: E731
+    before = {"set_off": -30}
+    assert astro_at(OSLO, {}, dec(14, 50))["day"] is True
+    assert astro_at(OSLO, before, dec(14, 50))["day"] is False  # light on 30 min before sunset
+    assert astro_at(OSLO, before, dec(14, 30))["day"] is True
+    after = {"rise_off": 30}
+    assert astro_at(OSLO, after, dec(9, 30))["day"] is False
+    assert astro_at(OSLO, after, dec(9, 55))["day"] is True
+    # the outputs still show the real times
+    out = astro_at(OSLO, before, dec(12, 0))
+    assert abs(out["set"] - (15 * 60 + 12)) <= 3
+    # offsets larger than the day: no day at all
+    assert astro_at(OSLO, {"rise_off": 200, "set_off": -200}, dec(12, 0))["day"] is False
+
+
+def test_astro_offsets_over_midnight_and_polar():
+    # Tromsø: sunset 23:55 on 15 May, +30 min keeps it day until 00:25 the next date
+    assert astro_at(TROMSO, {}, datetime(2024, 5, 16, 0, 10, tzinfo=CEST))["day"] is False
+    assert astro_at(TROMSO, {"set_off": 30}, datetime(2024, 5, 16, 0, 10, tzinfo=CEST))["day"] is True
+    # no sunrise/sunset for days: falls back to the sun's elevation
+    assert astro_at(TROMSO, {"set_off": -30}, datetime(2024, 6, 21, 23, 0, tzinfo=CEST))["day"] is True
+    assert astro_at(TROMSO, {"rise_off": 30}, datetime(2024, 12, 21, 12, 0, tzinfo=CET))["day"] is False
+
+
 def test_sun_events_none_in_polar_night():
     assert sun_events(2024, 12, 21, 69.6492, 18.9553, -0.833) == (None, None)
 

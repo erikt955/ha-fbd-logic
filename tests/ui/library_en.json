@@ -1971,8 +1971,21 @@
    "category": "time",
    "title": "Astro clock",
    "symbol": "ASTRO",
-   "description": "The sun's elevation and direction, and whether it is day, from the location in Home Assistant (or your own latitude/longitude). 'day' is on while the sun is above the chosen horizon, and also works with midnight sun and polar night. 'rise' and 'set' are today's sunrise and sunset in minutes after midnight (like the clock's daymin), -1 if the sun does not rise or set today. Azimuth is degrees from north, clockwise (90 = east, 180 = south). For an offset, e.g. lights 30 min after sunset: choose twilight, or use TON/TOF after the block.",
-   "inputs": [],
+   "description": "The sun's elevation and direction, and whether it is day, from the location in Home Assistant (or your own latitude/longitude). 'day' is on while the sun is above the chosen horizon, and also works with midnight sun and polar night. 'rise' and 'set' are today's sunrise and sunset in minutes after midnight (like the clock's daymin), -1 if the sun does not rise or set today. Azimuth is degrees from north, clockwise (90 = east, 180 = south). An offset in minutes moves when 'day' starts and ends: 'set ±min' = -30 ends day (lights can turn on) 30 min before sunset, 'rise ±min' = 30 starts day 30 min after sunrise. 'rise' and 'set' still show the real times.",
+   "inputs": [
+    {
+     "name": "rise_off",
+     "type": "num",
+     "default": 0,
+     "label": "rise ±min"
+    },
+    {
+     "name": "set_off",
+     "type": "num",
+     "default": 0,
+     "label": "set ±min"
+    }
+   ],
    "outputs": [
     {
      "name": "day",
@@ -2062,7 +2075,7 @@
    ],
    "dynamic": null,
    "ha": null,
-   "width": 110
+   "width": 130
   },
   {
    "type": "runtime",

@@ -18,7 +18,7 @@ import copy
 import math
 import struct
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import date, datetime, timedelta
 from typing import Any, Callable
 
 from .expr import ExpressionError, compile_expression
@@ -1459,6 +1459,31 @@ def _coord(value: Any) -> float | None:
         return None
 
 
+def _day_transitions(
+    day0: date, lat: float, lon: float, h0: float, rise_off: float, set_off: float
+) -> tuple[list[tuple[float, bool]], bool]:
+    """Shifted day start (True) and end (False) times, in minutes after 00:00 UTC of day0,
+    from two days before to the day after, and whether the sun rose or set at all in that
+    time. A day the offsets swallow has no transitions."""
+    out: list[tuple[float, bool]] = []
+    crossed = False
+    for k in range(-2, 2):
+        d = day0 + timedelta(days=k)
+        rise, set_ = sun_events(d.year, d.month, d.day, lat, lon, h0)
+        crossed = crossed or rise is not None or set_ is not None
+        r = None if rise is None else 1440 * k + rise + rise_off
+        st = None if set_ is None else 1440 * k + set_ + set_off
+        if r is not None and st is not None:
+            if r < st:
+                out += [(r, True), (st, False)]
+        elif r is not None:
+            out.append((r, True))  # the sun rises and stays up (midnight sun begins)
+        elif st is not None:
+            out.append((st, False))  # the sun sets and stays down (polar night begins)
+    out.sort()
+    return out, crossed
+
+
 def _astro(ctx, i, p, s):
     lat, lon = _coord(p.get("lat")), _coord(p.get("lon"))
     if lat is None or lon is None:
@@ -1483,8 +1508,31 @@ def _astro(ctx, i, p, s):
         rise, set_ = sun_events(local.year, local.month, local.day, lat, lon, h0)
         s["_ev"] = tuple(-1.0 if t is None else round((t + off_min) % 1440, 1) for t in (rise, set_))
     rise_min, set_min = s["_ev"]
+    rise_off = max(-720.0, min(720.0, to_num(i["rise_off"])))
+    set_off = max(-720.0, min(720.0, to_num(i["set_off"])))
+    day = elev > h0
+    if rise_off or set_off:
+        # Shifted: day from sunrise + offset to sunset + offset. Found from the last
+        # transition before now, so it holds over midnight and polar day/night.
+        tkey = (local.date(), lat, lon, h0, rise_off, set_off)
+        if s.get("_tkey") != tkey:
+            s["_tkey"] = tkey
+            s["_tr"] = _day_transitions(local.date(), lat, lon, h0, rise_off, set_off)
+        d0 = local.date()
+        now_min = (utc - datetime(d0.year, d0.month, d0.day)).total_seconds() / 60
+        transitions, crossed = s["_tr"]
+        last = None
+        for t, on in transitions:
+            if t > now_min:
+                break
+            last = on
+        if last is not None:
+            day = last
+        elif crossed:
+            day = False  # the offsets swallow these days
+        # else: midnight sun or polar night for days – the elevation decides
     return {
-        "day": elev > h0,
+        "day": day,
         "elev": round(elev, 2),
         "azi": round(azimuth, 1),
         "rise": rise_min,
@@ -1504,9 +1552,12 @@ register(
             "horisont, og virker også ved midnattssol og mørketid. 'opp' og 'ned' er dagens "
             "soloppgang og solnedgang i minutter etter midnatt (som klokkens dagmin), -1 hvis "
             "solen ikke går opp eller ned i dag. Asimut er grader fra nord med klokken "
-            "(90 = øst, 180 = sør). For forskyvning, f.eks. lys 30 min etter solnedgang: "
-            "velg skumring, eller bruk TON/TOF etter blokken."
+            "(90 = øst, 180 = sør). Forskyvning i minutter flytter når 'dag' starter og "
+            "slutter: 'ned ±min' = -30 gjør at dag slutter (lyset kan tennes) 30 min før "
+            "solnedgang, 'opp ±min' = 30 at dag starter 30 min etter soloppgang. 'opp' og 'ned' "
+            "viser fortsatt de faktiske tidene."
         ),
+        inputs=[Port("rise_off", NUM, 0, "opp ±min"), Port("set_off", NUM, 0, "ned ±min")],
         outputs=[
             Port("day", BOOL, label="dag"),
             Port("elev", NUM, label="solhøyde"),
@@ -1532,7 +1583,7 @@ register(
             Param("lon", "text", "", "Lengdegrad", help="Tom = posisjonen i Home Assistant"),
         ],
         fn=_astro,
-        width=110,
+        width=130,
     )
 )
 
