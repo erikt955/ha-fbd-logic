@@ -135,7 +135,7 @@ En generell PID-regulator for alle slags prosesser: temperatur, trykk, fukt, CO�
 
 ### Astrour
 
-`dag` er på mens solen står over valgt horisont: selve horisonten (soloppgang/-nedgang), borgerlig skumring (−6°), nautisk skumring (−12°) eller en egen solhøyde. Den regnes ut fra solhøyden, så den virker også ved midnattssol og mørketid. `opp` og `ned` er dagens tider i minutter etter midnatt (−1 når solen ikke går opp eller ned). `solhøyde` og `asimut` (grader fra nord) passer til solskjerming. Forskyv dagen i minutter med `opp ±min` og `ned ±min`: `ned ±min` = −30 avslutter `dag` 30 minutter før solnedgang, så lys koblet til IKKE `dag` tennes da; `opp ±min` = 30 starter den 30 minutter etter soloppgang. Forskyvningen virker også når solnedgangen er etter midnatt.
+`dag` er på mens solen står over valgt horisont: selve horisonten (soloppgang/-nedgang), borgerlig skumring (−6°), nautisk skumring (−12°) eller en egen solhøyde. Den regnes ut fra solhøyden, så den virker også ved midnattssol og mørketid. `natt` er det motsatte, klar for utelys. `opp` og `ned` er dagens tider i minutter etter midnatt (−1 når solen ikke går opp eller ned). `solhøyde` og `asimut` (grader fra nord) passer til solskjerming. Forskyv dagen i minutter med `opp ±min` og `ned ±min`: `ned ±min` = −30 starter `natt` 30 minutter før solnedgang, så utelys koblet til `natt` tennes da; `opp ±min` = 30 holder `natt` til 30 minutter etter soloppgang. Forskyvningen virker også når solnedgangen er etter midnatt.
 
 ### Lastbalansering
 

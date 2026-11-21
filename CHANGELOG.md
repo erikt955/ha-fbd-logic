@@ -2,7 +2,7 @@
 
 ## 0.6.0
 
-- New block **Astro clock** (`ASTRO`, Time): sun elevation and azimuth, `day` while the sun is above the horizon, civil or nautical twilight or a custom elevation, and today's sunrise and sunset (minutes after midnight). Offsets in minutes move when `day` starts and ends, e.g. −30 on `set ±min` for lights 30 minutes before sunset. Uses the location in Home Assistant, or your own latitude/longitude. Works with midnight sun and polar night; the times agree with the `astral` library within a minute.
+- New block **Astro clock** (`ASTRO`, Time): sun elevation and azimuth, `day` while the sun is above the horizon and `night` as its opposite, civil or nautical twilight or a custom elevation, and today's sunrise and sunset (minutes after midnight). Offsets in minutes move when `day` starts and ends, e.g. −30 on `set ±min` for outdoor lights on `night` 30 minutes before sunset. Uses the location in Home Assistant, or your own latitude/longitude. Works with midnight sun and polar night; the times agree with the `astral` library within a minute.
 - New block **Load balancing** (`LB`, Control): divides the available current between 1–8 chargers. Every active charger first gets the minimum (6 A by default), highest priority first, and a charger that cannot get it is paused (0 A). The rest goes to the highest priority first and is shared evenly within a priority, up to each charger's max. Outputs per charger, plus unused current and a `limited` flag.
 - Blocks can have a variable number of outputs that follows a setting (used by Load balancing). Wires from outputs that disappear are removed.
 

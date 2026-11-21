@@ -117,7 +117,8 @@ def test_astro_offsets_shift_day():
     dec = lambda h, m: datetime(2024, 12, 21, h, m, tzinfo=CET)  # noqa: E731
     before = {"set_off": -30}
     assert astro_at(OSLO, {}, dec(14, 50))["day"] is True
-    assert astro_at(OSLO, before, dec(14, 50))["day"] is False  # light on 30 min before sunset
+    out = astro_at(OSLO, before, dec(14, 50))
+    assert out["day"] is False and out["night"] is True  # outdoor light on 30 min before sunset
     assert astro_at(OSLO, before, dec(14, 30))["day"] is True
     after = {"rise_off": 30}
     assert astro_at(OSLO, after, dec(9, 30))["day"] is False

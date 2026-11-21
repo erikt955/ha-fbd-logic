@@ -1533,6 +1533,7 @@ def _astro(ctx, i, p, s):
         # else: midnight sun or polar night for days – the elevation decides
     return {
         "day": day,
+        "night": not day,
         "elev": round(elev, 2),
         "azi": round(azimuth, 1),
         "rise": rise_min,
@@ -1549,17 +1550,19 @@ register(
         description=(
             "Solens høyde og retning, og om det er dag, ut fra posisjonen i Home Assistant "
             "(eller egen breddegrad/lengdegrad). 'dag' er på mens solen står over valgt "
-            "horisont, og virker også ved midnattssol og mørketid. 'opp' og 'ned' er dagens "
+            "horisont, og virker også ved midnattssol og mørketid. 'natt' er det motsatte, "
+            "f.eks. for utelys. 'opp' og 'ned' er dagens "
             "soloppgang og solnedgang i minutter etter midnatt (som klokkens dagmin), -1 hvis "
             "solen ikke går opp eller ned i dag. Asimut er grader fra nord med klokken "
             "(90 = øst, 180 = sør). Forskyvning i minutter flytter når 'dag' starter og "
-            "slutter: 'ned ±min' = -30 gjør at dag slutter (lyset kan tennes) 30 min før "
-            "solnedgang, 'opp ±min' = 30 at dag starter 30 min etter soloppgang. 'opp' og 'ned' "
+            "slutter: 'ned ±min' = -30 gjør at natt starter (utelyset tennes) 30 min før "
+            "solnedgang, 'opp ±min' = 30 at natt varer til 30 min etter soloppgang. 'opp' og 'ned' "
             "viser fortsatt de faktiske tidene."
         ),
         inputs=[Port("rise_off", NUM, 0, "opp ±min"), Port("set_off", NUM, 0, "ned ±min")],
         outputs=[
             Port("day", BOOL, label="dag"),
+            Port("night", BOOL, label="natt"),
             Port("elev", NUM, label="solhøyde"),
             Port("azi", NUM, label="asimut"),
             Port("rise", NUM, label="opp"),

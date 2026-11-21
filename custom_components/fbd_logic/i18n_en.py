@@ -278,16 +278,18 @@ EN: dict[str, str] = {
         "Local time: hour, minute, minutes since midnight, weekday (1=Mon) and weekend."
     ),
     "Astrour": "Astro clock",
-    "Solens høyde og retning, og om det er dag, ut fra posisjonen i Home Assistant (eller egen breddegrad/lengdegrad). 'dag' er på mens solen står over valgt horisont, og virker også ved midnattssol og mørketid. 'opp' og 'ned' er dagens soloppgang og solnedgang i minutter etter midnatt (som klokkens dagmin), -1 hvis solen ikke går opp eller ned i dag. Asimut er grader fra nord med klokken (90 = øst, 180 = sør). Forskyvning i minutter flytter når 'dag' starter og slutter: 'ned ±min' = -30 gjør at dag slutter (lyset kan tennes) 30 min før solnedgang, 'opp ±min' = 30 at dag starter 30 min etter soloppgang. 'opp' og 'ned' viser fortsatt de faktiske tidene.": (
+    "Solens høyde og retning, og om det er dag, ut fra posisjonen i Home Assistant (eller egen breddegrad/lengdegrad). 'dag' er på mens solen står over valgt horisont, og virker også ved midnattssol og mørketid. 'natt' er det motsatte, f.eks. for utelys. 'opp' og 'ned' er dagens soloppgang og solnedgang i minutter etter midnatt (som klokkens dagmin), -1 hvis solen ikke går opp eller ned i dag. Asimut er grader fra nord med klokken (90 = øst, 180 = sør). Forskyvning i minutter flytter når 'dag' starter og slutter: 'ned ±min' = -30 gjør at natt starter (utelyset tennes) 30 min før solnedgang, 'opp ±min' = 30 at natt varer til 30 min etter soloppgang. 'opp' og 'ned' viser fortsatt de faktiske tidene.": (
         "The sun's elevation and direction, and whether it is day, from the location in Home "
         "Assistant (or your own latitude/longitude). 'day' is on while the sun is above the chosen "
-        "horizon, and also works with midnight sun and polar night. 'rise' and 'set' are today's "
-        "sunrise and sunset in minutes after midnight (like the clock's daymin), -1 if the sun does "
-        "not rise or set today. Azimuth is degrees from north, clockwise (90 = east, 180 = south). "
-        "An offset in minutes moves when 'day' starts and ends: 'set ±min' = -30 ends day (lights can "
-        "turn on) 30 min before sunset, 'rise ±min' = 30 starts day 30 min after sunrise. 'rise' and "
-        "'set' still show the real times."
+        "horizon, and also works with midnight sun and polar night. 'night' is the opposite, e.g. "
+        "for outdoor lights. 'rise' and 'set' are today's sunrise and sunset in minutes after "
+        "midnight (like the clock's daymin), -1 if the sun does not rise or set today. Azimuth is "
+        "degrees from north, clockwise (90 = east, 180 = south). An offset in minutes moves when "
+        "'day' starts and ends: 'set ±min' = -30 starts night (outdoor lights on) 30 min before "
+        "sunset, 'rise ±min' = 30 keeps night until 30 min after sunrise. 'rise' and 'set' still "
+        "show the real times."
     ),
+    "natt": "night",
     "opp ±min": "rise ±min",
     "ned ±min": "set ±min",
     "dag": "day",

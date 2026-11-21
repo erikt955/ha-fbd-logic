@@ -143,7 +143,7 @@ A general PID controller for all kinds of processes: temperature, pressure, humi
 
 ### Astro clock
 
-`day` is on while the sun is above the chosen horizon: the horizon itself (sunrise/sunset), civil twilight (−6°), nautical twilight (−12°) or a custom elevation. It is computed from the sun's elevation, so it also works with midnight sun and polar night. `rise` and `set` are today's times in minutes after midnight (−1 when the sun does not rise or set). `elevation` and `azimuth` (degrees from north) are useful for sun shading. Shift the day in minutes with `rise ±min` and `set ±min`: `set ±min` = −30 ends `day` 30 minutes before sunset, so lights wired to NOT `day` turn on then; `rise ±min` = 30 starts it 30 minutes after sunrise. The shift also holds when sunset is after midnight.
+`day` is on while the sun is above the chosen horizon: the horizon itself (sunrise/sunset), civil twilight (−6°), nautical twilight (−12°) or a custom elevation. It is computed from the sun's elevation, so it also works with midnight sun and polar night. `night` is the opposite, ready for outdoor lights. `rise` and `set` are today's times in minutes after midnight (−1 when the sun does not rise or set). `elevation` and `azimuth` (degrees from north) are useful for sun shading. Shift the day in minutes with `rise ±min` and `set ±min`: `set ±min` = −30 starts `night` 30 minutes before sunset, so outdoor lights on `night` turn on then; `rise ±min` = 30 keeps `night` until 30 minutes after sunrise. The shift also holds when sunset is after midnight.
 
 ### Load balancing
 
