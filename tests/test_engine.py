@@ -429,6 +429,56 @@ def test_ratelimit_keeps_value_over_restart():
     assert p2.nodes["r"].outputs["out"] == 7
 
 
+def test_sample_hold_lets_newest_value_through_per_interval():
+    p = prog([n("s", "sample_hold", consts={"in": 10, "t": 10})])
+    out = lambda: p.nodes["s"].outputs  # noqa: E731
+    p.step(0)
+    assert out() == {"out": 10, "upd": True}  # first scan: start at the input
+    p.nodes["s"].consts["in"] = 40
+    p.step(1)
+    assert out() == {"out": 10, "upd": False}  # held: interval not over
+    p.nodes["s"].consts["in"] = 63
+    p.step(9.5)
+    assert out()["out"] == 10
+    p.step(10)
+    assert out() == {"out": 63, "upd": True}  # the value at that moment, no ramp
+    p.step(11)
+    assert out() == {"out": 63, "upd": False}  # pulse lasts one scan
+    # input has stopped changing: nothing more to send
+    p.step(25)
+    assert out() == {"out": 63, "upd": False}
+    # a change after a quiet period passes at once
+    p.nodes["s"].consts["in"] = 70
+    p.step(26)
+    assert out() == {"out": 70, "upd": True}
+    # deadband: a smaller change is held
+    p.nodes["s"].consts["db"] = 2
+    p.nodes["s"].consts["in"] = 71
+    p.step(40)
+    assert out()["out"] == 70
+    p.nodes["s"].consts["in"] = 72
+    p.step(41)
+    assert out()["out"] == 72
+    # disabled: follows the input directly
+    p.nodes["s"].consts["en"] = False
+    p.nodes["s"].consts["in"] = 5
+    p.step(42)
+    assert out() == {"out": 5, "upd": False}
+    assert p.retained_state()["s"]["s"] == {"out": 5}
+
+
+def test_sample_hold_text_and_restart():
+    p = prog([n("s", "sample_hold", consts={"in": "heat", "t": 60})])
+    p.step(0)
+    p.nodes["s"].consts["in"] = "cool"
+    p.step(5)
+    assert p.nodes["s"].outputs["out"] == "heat"
+    retained = p.retained_state()
+    p2 = Program({"id": "p1", "nodes": [n("s", "sample_hold", consts={"in": "heat", "t": 60})], "links": []}, io=FakeIO(), retained=retained)
+    p2.step(100)
+    assert p2.nodes["s"].outputs == {"out": "heat", "upd": False}  # kept, no false update
+
+
 # ---------------------------------------------------------------- HA io blocks
 def test_entity_in_invalid_handling():
     io = FakeIO()

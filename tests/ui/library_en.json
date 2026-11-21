@@ -2241,6 +2241,57 @@
    "width": 110
   },
   {
+   "type": "sample_hold",
+   "category": "control",
+   "title": "Sample & hold",
+   "symbol": "S&H",
+   "description": "Holds the value and lets the newest value through at most once per interval (seconds), without a ramp. A change after a quiet period passes at once. Changes smaller than the deadband are not let through. When enable is off, the output follows the input directly. 'updated' is on in the scan the value is let through. Kept over a restart.",
+   "inputs": [
+    {
+     "name": "in",
+     "type": "any",
+     "default": 0,
+     "label": "in"
+    },
+    {
+     "name": "t",
+     "type": "num",
+     "default": 10,
+     "label": "interval s"
+    },
+    {
+     "name": "db",
+     "type": "num",
+     "default": 0,
+     "label": "deadband"
+    },
+    {
+     "name": "en",
+     "type": "bool",
+     "default": true,
+     "label": "enable"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "out",
+     "type": "any",
+     "default": null,
+     "label": "out"
+    },
+    {
+     "name": "upd",
+     "type": "bool",
+     "default": null,
+     "label": "updated"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 120
+  },
+  {
    "type": "pt1",
    "category": "control",
    "title": "Low-pass filter",

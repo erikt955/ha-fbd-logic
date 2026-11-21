@@ -2241,6 +2241,57 @@
    "width": 110
   },
   {
+   "type": "sample_hold",
+   "category": "control",
+   "title": "Sample & hold",
+   "symbol": "S&H",
+   "description": "Holder verdien og slipper gjennom den nyeste verdien høyst én gang per intervall (sekunder), uten rampe. En endring etter en rolig periode går rett gjennom. Endringer mindre enn dødbåndet slippes ikke gjennom. Når aktiv er av, følger utgangen inngangen direkte. 'oppdatert' er på i skannet verdien slippes gjennom. Huskes over omstart.",
+   "inputs": [
+    {
+     "name": "in",
+     "type": "any",
+     "default": 0,
+     "label": "in"
+    },
+    {
+     "name": "t",
+     "type": "num",
+     "default": 10,
+     "label": "intervall s"
+    },
+    {
+     "name": "db",
+     "type": "num",
+     "default": 0,
+     "label": "dødbånd"
+    },
+    {
+     "name": "en",
+     "type": "bool",
+     "default": true,
+     "label": "aktiv"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "out",
+     "type": "any",
+     "default": null,
+     "label": "out"
+    },
+    {
+     "name": "upd",
+     "type": "bool",
+     "default": null,
+     "label": "oppdatert"
+    }
+   ],
+   "params": [],
+   "dynamic": null,
+   "ha": null,
+   "width": 120
+  },
+  {
    "type": "pt1",
    "category": "control",
    "title": "Lavpassfilter",

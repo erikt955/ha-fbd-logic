@@ -13,7 +13,7 @@ Draw logic as a **function block diagram (FBD)** in a sidebar panel in Home Assi
 
 ## Features
 
-- **61 blocks**: logic, compare, math, timers, weekly schedule, PID controller, ramp, filter, HA entities, KNX and Modbus.
+- **62 blocks**: logic, compare, math, timers, weekly schedule, PID controller, ramp, filter, HA entities, KNX and Modbus.
 - **Live values** on every wire and output, with **forcing** and a **trend** of up to 8 signals.
 - **Pages**, **connectors** between pages, and **macros** (your own blocks made of other blocks).
 - **Scan on change**: a program reacts within a millisecond of HA getting the change, whatever its cycle time.
@@ -102,7 +102,7 @@ With Online on, every output in the properties panel has a **Force** button:
 | Compare | >, ≥, <, ≤, =, ≠, hysteresis, in range, select (SEL), multiplexer (MUX, 2–16 inputs), priority select, text equals |
 | Math | +, −, ×, ÷, MIN, MAX, AVG, ABS, LIMIT, linear scaling, round, formula, get bit |
 | Time | on delay (TON), off delay (TOF), pulse (TP), pulse generator, clock, run time, counter, weekly schedule |
-| Control | PID controller, ramp, rate limiter (separate up/down rates), low-pass filter (PT1) |
+| Control | PID controller, ramp, rate limiter (separate up/down rates), sample & hold (newest value at most once per interval), low-pass filter (PT1) |
 | KNX / Modbus | KNX send, KNX listen, Modbus write |
 | Other | constant (number / on-off), comment, connector (sender/receiver) |
 | Macros | your own macro blocks |
@@ -162,7 +162,7 @@ Each program becomes a **device** in HA, and its blocks make entities under it:
   - Classes such as `energy` cannot be a measurement in HA, so such a sensor gets no long-term statistics.
   - Every new value is a new state in HA and a row in its database. **Deadband** and **minimum interval** limit that for values that change often; the latest value always gets through.
 
-Setpoints, switches and the state of latches, counters, run time, PID, ramp, rate limiter and filter are stored and survive a restart. The entities are removed when the block or the program is deleted.
+Setpoints, switches and the state of latches, counters, run time, PID, ramp, rate limiter, sample & hold and filter are stored and survive a restart. The entities are removed when the block or the program is deleted.
 
 ## Write entity – what is sent
 

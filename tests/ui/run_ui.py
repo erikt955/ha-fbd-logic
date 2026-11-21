@@ -57,7 +57,7 @@ try:
         root = page.locator("fbd-logic-panel")
         page.wait_for_selector("fbd-logic-panel >> .palette .item")
         n_items = root.locator(".palette .item").count()
-        check(n_items == 59, f"palette shows all blocks except macro pins ({n_items})")
+        check(n_items == 60, f"palette shows all blocks except macro pins ({n_items})")
         check(root.locator('.palette .item[data-type="macro_in"]').count() == 0, "macro pins hidden outside macro mode")
         fit = page.evaluate(
             "() => [window.__panel.getBoundingClientRect().height, innerHeight, document.scrollingElement.scrollHeight]"

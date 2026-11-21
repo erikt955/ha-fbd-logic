@@ -2,6 +2,7 @@
 
 ## 0.5.0
 
+- New block **Sample & hold** (`S&H`, Control): holds the value and lets the newest value through at most once per interval, without a ramp – for example a PID output that should reach an actuator at most every 10 s. A change after a quiet period passes at once, the output always catches up with an input that has stopped changing, and changes smaller than the deadband are held. Works for numbers, on/off and text, has an `updated` pulse and is kept over a restart.
 - **Wire bends can be moved.** Select a wire and drag its bend (the vertical segment, or the lower one for a wire going backwards). The bend snaps to the grid, is saved with the program and moves along when both blocks are moved together. Double-click the wire, or press “Automatic routing”, to reset it.
 - **Pins lie on the grid.** Header, info line and pin rows are 20 px, so every pin is on the grid and an output and an input can always be put level for a straight wire. Blocks become slightly taller.
 - **Icon.** The integration ships its own icon (`brand/`), shown in HA 2026.3 and later.

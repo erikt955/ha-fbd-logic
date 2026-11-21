@@ -9,7 +9,7 @@ SAME: set[str] = {
     "Home Assistant", "KNX / Modbus", "XOR", "A", "B", "q", "s", "r", "g", "k", "in", "out", "in0", "in1",
     "err", "min", "Min", "PV", "SP", "Kp", "Ti s", "Td s", "auto", "Auto", "idx", "bit", "cu", "count",
     "reset", "rate/s", "tau s", "Type", "Coil", "int16", "uint16", "DPT / type", "9.004 Lux",
-    "VOC (tall)",
+    "VOC (tall)", "Sample & hold",
 }
 
 EN: dict[str, str] = {
@@ -317,6 +317,15 @@ EN: dict[str, str] = {
     ),
     "opp/s": "up/s",
     "ned/s": "down/s",
+    "Holder verdien og slipper gjennom den nyeste verdien høyst én gang per intervall (sekunder), uten rampe. En endring etter en rolig periode går rett gjennom. Endringer mindre enn dødbåndet slippes ikke gjennom. Når aktiv er av, følger utgangen inngangen direkte. 'oppdatert' er på i skannet verdien slippes gjennom. Huskes over omstart.": (
+        "Holds the value and lets the newest value through at most once per interval (seconds), "
+        "without a ramp. A change after a quiet period passes at once. Changes smaller than the "
+        "deadband are not let through. When enable is off, the output follows the input directly. "
+        "'updated' is on in the scan the value is let through. Kept over a restart."
+    ),
+    "intervall s": "interval s",
+    "dødbånd": "deadband",
+    "oppdatert": "updated",
     "begrenser": "limiting",
     "Lavpassfilter": "Low-pass filter",
     "Førsteordens filter med tidskonstant tau (sekunder).": "First-order filter with time constant tau (seconds).",

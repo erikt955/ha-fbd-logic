@@ -1604,6 +1604,54 @@ register(
 )
 
 
+def _sample_hold(ctx, i, p, s):
+    value = i["in"]
+    if not i["en"]:
+        s["out"] = value
+        return {"out": value, "upd": False}
+    if "out" not in s:  # first scan ever: start at the input
+        s["out"] = value
+        s["t"] = ctx.now
+        return {"out": value, "upd": True}
+    upd = False
+    # The newest value passes once the interval has run since the last update, so the
+    # output always catches up with an input that has stopped changing.
+    if _values_differ(value, s["out"], max(0.0, to_num(i["db"]))) and ctx.now - s.get(
+        "t", -1e12
+    ) >= max(0.0, to_num(i["t"])):
+        s["out"] = value
+        s["t"] = ctx.now
+        upd = True
+    return {"out": s["out"], "upd": upd}
+
+
+register(
+    BlockDef(
+        type="sample_hold",
+        category="control",
+        title="Sample & hold",
+        symbol="S&H",
+        description=(
+            "Holder verdien og slipper gjennom den nyeste verdien høyst én gang per intervall "
+            "(sekunder), uten rampe. En endring etter en rolig periode går rett gjennom. "
+            "Endringer mindre enn dødbåndet slippes ikke gjennom. Når aktiv er av, følger "
+            "utgangen inngangen direkte. 'oppdatert' er på i skannet verdien slippes gjennom. "
+            "Huskes over omstart."
+        ),
+        inputs=[
+            Port("in", ANY, 0),
+            Port("t", NUM, 10, "intervall s"),
+            Port("db", NUM, 0, "dødbånd"),
+            Port("en", BOOL, True, "aktiv"),
+        ],
+        outputs=[Port("out", ANY), Port("upd", BOOL, label="oppdatert")],
+        fn=_sample_hold,
+        retain=("out",),
+        width=120,
+    )
+)
+
+
 def _pt1(ctx, i, p, s):
     x, tau = i["in"], max(0.0, i["tau"])
     y = s.get("y", x)

@@ -8,7 +8,7 @@ Tegn logikk som **funksjonsblokkdiagram (FBD)** i et eget sidepanel i Home Assis
 
 ## Funksjoner
 
-- **61 blokker**: logikk, sammenligning, matematikk, tid, ukeplan, PID-regulator, rampe, filter, HA-entiteter, KNX og Modbus.
+- **62 blokker**: logikk, sammenligning, matematikk, tid, ukeplan, PID-regulator, rampe, filter, HA-entiteter, KNX og Modbus.
 - **Live-verdier** på alle tråder og utganger, med **tvangsstyring** og **trend** for inntil 8 signaler.
 - **Sider**, **koblingspunkter** mellom sider og **makroer** (egne blokker satt sammen av andre blokker).
 - **Skann ved endring**: programmet reagerer under ett millisekund etter at HA har fått endringen, uansett syklustid.
@@ -94,7 +94,7 @@ Med Online på har hver utgang i egenskapspanelet knappen **Tving**:
 | Sammenligning | >, ≥, <, ≤, =, ≠, hysterese, innenfor område, velger (SEL), multiplekser (MUX, 2–16 innganger), prioritetsvelger, tekst lik |
 | Matematikk | +, −, ×, ÷, MIN, MAX, AVG, ABS, LIMIT, lineær skalering, avrunding, formel, hent bit |
 | Tid | TON, TOF, TP, pulsgenerator, klokke, driftstid, teller, ukeplan |
-| Regulering | PID-regulator, rampe, endringsbegrenser (egen rate opp/ned), lavpassfilter (PT1) |
+| Regulering | PID-regulator, rampe, endringsbegrenser (egen rate opp/ned), sample & hold (nyeste verdi høyst én gang per intervall), lavpassfilter (PT1) |
 | KNX / Modbus | KNX send, KNX lytt, Modbus skriv |
 | Annet | Konstant (tall / av-på), kommentar, koblingspunkt (sender/mottaker) |
 | Makroer | Dine egne makroblokker |
@@ -154,7 +154,7 @@ Hvert program blir en **enhet** i HA, og blokkene lager entiteter under den:
   - Klasser som `energy` kan ikke være en måling i HA. Sensoren får da ingen langtidsstatistikk.
   - Hver ny verdi blir en ny tilstand i HA og en rad i databasen. **Dødbånd** og **minste intervall** begrenser det for verdier som endrer seg ofte. Siste verdi kommer alltid fram.
 
-Settpunkter, brytere og tilstanden til låser, tellere, driftstid, PID, rampe, endringsbegrenser og filter lagres og overlever omstart. Entitetene fjernes når blokken eller programmet slettes.
+Settpunkter, brytere og tilstanden til låser, tellere, driftstid, PID, rampe, endringsbegrenser, sample & hold og filter lagres og overlever omstart. Entitetene fjernes når blokken eller programmet slettes.
 
 ## Skriv entitet – hva som sendes
 
