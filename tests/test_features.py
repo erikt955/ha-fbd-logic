@@ -49,6 +49,9 @@ class FakeIO:
     def knx_value(self, address):
         return self.knx.get(address)
 
+    def location(self):
+        return (59.91, 10.75)
+
 
 def n(id_, type_, x=0, y=0, params=None, consts=None, **kw):
     d = {"id": id_, "type": type_, "x": x, "y": y, "params": params or {}, "consts": consts or {}}

@@ -9,7 +9,7 @@ SAME: set[str] = {
     "Home Assistant", "KNX / Modbus", "XOR", "A", "B", "q", "s", "r", "g", "k", "in", "out", "in0", "in1",
     "err", "min", "Min", "PV", "SP", "Kp", "Ti s", "Td s", "auto", "Auto", "idx", "bit", "cu", "count",
     "reset", "rate/s", "tau s", "Type", "Coil", "int16", "uint16", "DPT / type", "9.004 Lux",
-    "VOC (tall)", "Sample & hold",
+    "VOC (tall)", "Sample & hold", "rest",
 }
 
 EN: dict[str, str] = {
@@ -277,6 +277,31 @@ EN: dict[str, str] = {
     "Lokal tid: time, minutt, minutter siden midnatt, ukedag (1=man) og helg.": (
         "Local time: hour, minute, minutes since midnight, weekday (1=Mon) and weekend."
     ),
+    "Astrour": "Astro clock",
+    "Solens høyde og retning, og om det er dag, ut fra posisjonen i Home Assistant (eller egen breddegrad/lengdegrad). 'dag' er på mens solen står over valgt horisont, og virker også ved midnattssol og mørketid. 'opp' og 'ned' er dagens soloppgang og solnedgang i minutter etter midnatt (som klokkens dagmin), -1 hvis solen ikke går opp eller ned i dag. Asimut er grader fra nord med klokken (90 = øst, 180 = sør). For forskyvning, f.eks. lys 30 min etter solnedgang: velg skumring, eller bruk TON/TOF etter blokken.": (
+        "The sun's elevation and direction, and whether it is day, from the location in Home "
+        "Assistant (or your own latitude/longitude). 'day' is on while the sun is above the chosen "
+        "horizon, and also works with midnight sun and polar night. 'rise' and 'set' are today's "
+        "sunrise and sunset in minutes after midnight (like the clock's daymin), -1 if the sun does "
+        "not rise or set today. Azimuth is degrees from north, clockwise (90 = east, 180 = south). "
+        "For an offset, e.g. lights 30 min after sunset: choose twilight, or use TON/TOF after the block."
+    ),
+    "dag": "day",
+    "solhøyde": "elevation",
+    "asimut": "azimuth",
+    "opp": "rise",
+    "ned": "set",
+    "Dag er når solen står over": "Day while the sun is above",
+    "Horisonten (soloppgang/-nedgang)": "The horizon (sunrise/sunset)",
+    "Borgerlig skumring (−6°)": "Civil twilight (−6°)",
+    "Nautisk skumring (−12°)": "Nautical twilight (−12°)",
+    "Egen solhøyde": "Custom elevation",
+    "Solhøyde (°)": "Sun elevation (°)",
+    "Breddegrad": "Latitude",
+    "Lengdegrad": "Longitude",
+    "Tom = posisjonen i Home Assistant": "Empty = the location in Home Assistant",
+    "Mangler posisjon: fyll inn breddegrad og lengdegrad": "No location: fill in latitude and longitude",
+    "Ugyldig posisjon": "Invalid location",
     "Driftstid": "Run time",
     "Teller driftstimer mens inngangen er på. Huskes over omstart.": "Counts running hours while the input is on. Kept over a restart.",
     "Teller": "Counter",
@@ -326,6 +351,21 @@ EN: dict[str, str] = {
     "intervall s": "interval s",
     "dødbånd": "deadband",
     "oppdatert": "updated",
+    # ------------------------------------------------------------------ load balancing
+    "Lastbalansering": "Load balancing",
+    "Fordeler tilgjengelig strøm (A) mellom flere ladere. Hver aktive lader får først minstestrømmen, høyest prioritet først; en lader som ikke får minstestrømmen får 0 (pause). Resten går til høyest prioritet først og deles likt mellom ladere med samme prioritet, opp til laderens maks. Lik prioritet på alle gir lik fordeling. 'rest' er strøm som ikke ble brukt, 'begrenset' er på når en aktiv lader får mindre enn maks.": (
+        "Divides the available current (A) between several chargers. Every active charger first gets "
+        "the minimum current, highest priority first; a charger that cannot get the minimum gets 0 "
+        "(paused). The rest goes to the highest priority first and is shared evenly between chargers "
+        "with the same priority, up to each charger's max. The same priority on all gives an even "
+        "share. 'rest' is current left unused, 'limited' is on when an active charger gets less than "
+        "its max."
+    ),
+    "tilgjengelig": "available",
+    "begrenset": "limited",
+    "Antall ladere": "Number of chargers",
+    "Minste strøm per lader (A)": "Minimum current per charger (A)",
+    "Hele ampere": "Whole amperes",
     "begrenser": "limiting",
     "Lavpassfilter": "Low-pass filter",
     "Førsteordens filter med tidskonstant tau (sekunder).": "First-order filter with time constant tau (seconds).",

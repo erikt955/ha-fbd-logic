@@ -13,7 +13,7 @@ Draw logic as a **function block diagram (FBD)** in a sidebar panel in Home Assi
 
 ## Features
 
-- **62 blocks**: logic, compare, math, timers, weekly schedule, PID controller, ramp, filter, HA entities, KNX and Modbus.
+- **64 blocks**: logic, compare, math, timers, weekly schedule, astro clock, PID controller, ramp, filter, load balancing for EV chargers, HA entities, KNX and Modbus.
 - **Live values** on every wire and output, with **forcing** and a **trend** of up to 8 signals.
 - **Pages**, **connectors** between pages, and **macros** (your own blocks made of other blocks).
 - **Scan on change**: a program reacts within a millisecond of HA getting the change, whatever its cycle time.
@@ -101,8 +101,8 @@ With Online on, every output in the properties panel has a **Force** button:
 | Logic | AND, OR, XOR (2–8 inputs), NOT, SR, RS, rising/falling edge, toggle |
 | Compare | >, ≥, <, ≤, =, ≠, hysteresis, in range, select (SEL), multiplexer (MUX, 2–16 inputs), priority select, text equals |
 | Math | +, −, ×, ÷, MIN, MAX, AVG, ABS, LIMIT, linear scaling, round, formula, get bit |
-| Time | on delay (TON), off delay (TOF), pulse (TP), pulse generator, clock, run time, counter, weekly schedule |
-| Control | PID controller, ramp, rate limiter (separate up/down rates), sample & hold (newest value at most once per interval), low-pass filter (PT1) |
+| Time | on delay (TON), off delay (TOF), pulse (TP), pulse generator, clock, astro clock (sunrise/sunset, sun elevation and azimuth), run time, counter, weekly schedule |
+| Control | PID controller, ramp, rate limiter (separate up/down rates), sample & hold (newest value at most once per interval), low-pass filter (PT1), load balancing (divide current between chargers by priority) |
 | KNX / Modbus | KNX send, KNX listen, Modbus write |
 | Other | constant (number / on-off), comment, connector (sender/receiver) |
 | Macros | your own macro blocks |
@@ -140,6 +140,14 @@ A general PID controller for all kinds of processes: temperature, pressure, humi
 - The integrator is stored and survives both saving the program and restarting HA.
 - A step in PV moves the output by Kp × ΔPV at once (the P term); the I term then moves it gradually. If the output moves too much on every small step of a sensor, lower Kp, use the deadband, filter PV with a PT1, or limit the output with a ramp.
 - HA is not a real-time system, and many sensors update only every second or less often. The controller is therefore not meant for loops that must react within milliseconds, such as motor speed control.
+
+### Astro clock
+
+`day` is on while the sun is above the chosen horizon: the horizon itself (sunrise/sunset), civil twilight (−6°), nautical twilight (−12°) or a custom elevation. It is computed from the sun's elevation, so it also works with midnight sun and polar night. `rise` and `set` are today's times in minutes after midnight (−1 when the sun does not rise or set). `elevation` and `azimuth` (degrees from north) are useful for sun shading. For lights 30 minutes after sunset, use civil twilight or an off delay (TOF) on `day`.
+
+### Load balancing
+
+Gives each charger its share of the available current, typically `available = (max power − other consumption) / voltage`. Wire `enN` to “charger N is charging or waiting”, set `prioN` (higher = more important) and `maxN` (the charger's or car's limit), and send `outN` to the charger, for example through Sample & hold. With the same priority on all, the current is shared evenly; when it is tight, the most important charger keeps the most and a charger that cannot get the minimum is paused. Chargers in one Zaptec installation are already balanced by Zaptec; the block is for chargers in separate installations or of different makes.
 
 ### KNX and Modbus
 

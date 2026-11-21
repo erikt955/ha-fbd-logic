@@ -1967,6 +1967,104 @@
    "width": 110
   },
   {
+   "type": "astro",
+   "category": "time",
+   "title": "Astrour",
+   "symbol": "ASTRO",
+   "description": "Solens høyde og retning, og om det er dag, ut fra posisjonen i Home Assistant (eller egen breddegrad/lengdegrad). 'dag' er på mens solen står over valgt horisont, og virker også ved midnattssol og mørketid. 'opp' og 'ned' er dagens soloppgang og solnedgang i minutter etter midnatt (som klokkens dagmin), -1 hvis solen ikke går opp eller ned i dag. Asimut er grader fra nord med klokken (90 = øst, 180 = sør). For forskyvning, f.eks. lys 30 min etter solnedgang: velg skumring, eller bruk TON/TOF etter blokken.",
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "day",
+     "type": "bool",
+     "default": null,
+     "label": "dag"
+    },
+    {
+     "name": "elev",
+     "type": "num",
+     "default": null,
+     "label": "solhøyde"
+    },
+    {
+     "name": "azi",
+     "type": "num",
+     "default": null,
+     "label": "asimut"
+    },
+    {
+     "name": "rise",
+     "type": "num",
+     "default": null,
+     "label": "opp"
+    },
+    {
+     "name": "set",
+     "type": "num",
+     "default": null,
+     "label": "ned"
+    }
+   ],
+   "params": [
+    {
+     "name": "horizon",
+     "type": "select",
+     "default": "sun",
+     "label": "Dag er når solen står over",
+     "options": [
+      {
+       "value": "sun",
+       "label": "Horisonten (soloppgang/-nedgang)"
+      },
+      {
+       "value": "civil",
+       "label": "Borgerlig skumring (−6°)"
+      },
+      {
+       "value": "nautical",
+       "label": "Nautisk skumring (−12°)"
+      },
+      {
+       "value": "custom",
+       "label": "Egen solhøyde"
+      }
+     ]
+    },
+    {
+     "name": "elev",
+     "type": "number",
+     "default": 0,
+     "label": "Solhøyde (°)",
+     "min": -18,
+     "max": 60,
+     "step": 0.5,
+     "show_if": {
+      "param": "horizon",
+      "in": [
+       "custom"
+      ]
+     }
+    },
+    {
+     "name": "lat",
+     "type": "text",
+     "default": "",
+     "label": "Breddegrad",
+     "help": "Tom = posisjonen i Home Assistant"
+    },
+    {
+     "name": "lon",
+     "type": "text",
+     "default": "",
+     "label": "Lengdegrad",
+     "help": "Tom = posisjonen i Home Assistant"
+    }
+   ],
+   "dynamic": null,
+   "ha": null,
+   "width": 110
+  },
+  {
    "type": "runtime",
    "category": "time",
    "title": "Driftstid",
@@ -2288,6 +2386,92 @@
    ],
    "params": [],
    "dynamic": null,
+   "ha": null,
+   "width": 120
+  },
+  {
+   "type": "loadshare",
+   "category": "control",
+   "title": "Lastbalansering",
+   "symbol": "LB",
+   "description": "Fordeler tilgjengelig strøm (A) mellom flere ladere. Hver aktive lader får først minstestrømmen, høyest prioritet først; en lader som ikke får minstestrømmen får 0 (pause). Resten går til høyest prioritet først og deles likt mellom ladere med samme prioritet, opp til laderens maks. Lik prioritet på alle gir lik fordeling. 'rest' er strøm som ikke ble brukt, 'begrenset' er på når en aktiv lader får mindre enn maks.",
+   "inputs": [
+    {
+     "name": "avail",
+     "type": "num",
+     "default": 0,
+     "label": "tilgjengelig"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "rest",
+     "type": "num",
+     "default": null,
+     "label": "rest"
+    },
+    {
+     "name": "lim",
+     "type": "bool",
+     "default": null,
+     "label": "begrenset"
+    }
+   ],
+   "params": [
+    {
+     "name": "n",
+     "type": "number",
+     "default": 2,
+     "label": "Antall ladere",
+     "min": 1,
+     "max": 8,
+     "step": 1
+    },
+    {
+     "name": "min_current",
+     "type": "number",
+     "default": 6,
+     "label": "Minste strøm per lader (A)",
+     "min": 0,
+     "step": 1
+    },
+    {
+     "name": "whole",
+     "type": "bool",
+     "default": true,
+     "label": "Hele ampere"
+    }
+   ],
+   "dynamic": {
+    "param": "n",
+    "pairs": [
+     [
+      "en",
+      "bool",
+      true
+     ],
+     [
+      "prio",
+      "num",
+      1.0
+     ],
+     [
+      "max",
+      "num",
+      32.0
+     ]
+    ],
+    "after": true,
+    "count": 2,
+    "min": 1,
+    "max": 8,
+    "outputs": [
+     [
+      "out",
+      "num"
+     ]
+    ]
+   },
    "ha": null,
    "width": 120
   },

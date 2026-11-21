@@ -72,6 +72,8 @@ class IOAdapter(Protocol):
 
     def knx_value(self, address: str) -> tuple[Any, int] | None: ...
 
+    def location(self) -> tuple[float, float] | None: ...
+
 
 class NullIO:
     """IO adapter that does nothing (used for validation/tests)."""
@@ -95,6 +97,9 @@ class NullIO:
         return True
 
     def knx_value(self, address):
+        return None
+
+    def location(self):
         return None
 
 
@@ -127,6 +132,7 @@ class Node:
     consts: dict[str, Any]
     inputs: list[Port]
     outputs: dict[str, Any]
+    out_ports: list[Port] = field(default_factory=list)
     in_links: dict[str, tuple[str, str]] = field(default_factory=dict)
     state: dict[str, Any] = field(default_factory=dict)
     error: str | None = None
@@ -309,6 +315,7 @@ class Program:
             params = bdef.param_defaults()
             params.update(raw.get("params") or {})
             inputs = bdef.input_ports(params)
+            out_ports = bdef.output_ports(params)
             consts = {}
             raw_consts = raw.get("consts") or {}
             for port in inputs:
@@ -320,7 +327,8 @@ class Program:
                 params=params,
                 consts=consts,
                 inputs=inputs,
-                outputs={p.name: _default_for(p) for p in bdef.outputs},
+                outputs={p.name: _default_for(p) for p in out_ports},
+                out_ports=out_ports,
                 x=float(raw.get("x", 0) or 0),
                 y=float(raw.get("y", 0) or 0),
                 scope=str(raw.get("_scope", "")),
@@ -360,6 +368,7 @@ class Program:
                 consts={p.name: consts.get(p.name, p.default) for p in bdef.inputs},
                 inputs=list(bdef.inputs),
                 outputs={p.name: _default_for(p) for p in bdef.outputs},
+                out_ports=list(bdef.outputs),
                 x=float(raw.get("x", 0) or 0),
                 y=float(raw.get("y", 0) or 0),
             )
@@ -494,7 +503,7 @@ class Program:
             node = self.nodes.get(nid)
             if node is None or not isinstance(ports, dict):
                 continue
-            types = {p.name: p.type for p in node.bdef.outputs if not p.hidden}
+            types = {p.name: p.type for p in node.out_ports if not p.hidden}
             for port, value in ports.items():
                 if port not in types:
                     continue
@@ -519,7 +528,7 @@ class Program:
                 entry["e"] = node.error
             if node.id in self.forces:
                 entry["f"] = dict(self.forces[node.id])
-            if not any(not p.hidden for p in node.bdef.outputs):
+            if not any(not p.hidden for p in node.out_ports):
                 # Sinks (write/publish/connector): show the incoming value.
                 link = node.in_links.get("value")
                 if link is not None:
@@ -579,7 +588,7 @@ class Program:
                     src_type = ANY
                     if link is not None:
                         src = self.nodes[link[0]]
-                        for port in src.bdef.outputs:
+                        for port in src.out_ports:
                             if port.name == link[1]:
                                 src_type = port.type
                     ptype = {BOOL: "bool", STR: "text"}.get(src_type, "num")

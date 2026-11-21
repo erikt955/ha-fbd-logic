@@ -194,6 +194,13 @@ class HassIO:
     def knx_value(self, address: str) -> tuple[Any, int] | None:
         return self.manager.knx_cache.get(address)
 
+    # ---------------------------------------------------------------- home location
+    def location(self) -> tuple[float, float] | None:
+        cfg = self.hass.config
+        if cfg.latitude is None or cfg.longitude is None:
+            return None
+        return float(cfg.latitude), float(cfg.longitude)
+
     # ---------------------------------------------------------------- read
     def read(self, entity_id: str, attribute: str) -> Any:
         if not entity_id:

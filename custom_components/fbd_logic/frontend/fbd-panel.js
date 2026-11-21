@@ -2,7 +2,7 @@
  * Plain web component, no build step. Talks to the backend over the
  * HA websocket API (fbd_logic/*).
  */
-const FBD_VERSION = "0.5.0";
+const FBD_VERSION = "0.6.0";
 const GRID = 10;
 // Header, info line and pin rows are whole multiples of GRID, so every pin lies on the
 // grid and pins on blocks at the same height line up for a straight wire.
@@ -1454,6 +1454,30 @@ class FbdLogicPanel extends HTMLElement {
     return dyn.after ? def.inputs.concat(ports) : ports.concat(def.inputs);
   }
 
+  // Same rule as BlockDef.output_ports(): dynamic.outputs gives one output each per index.
+  _outputPorts(def, params) {
+    const dyn = def && def.dynamic;
+    if (!def) return [];
+    if (!dyn || !dyn.outputs) return def.outputs.slice();
+    let n = parseInt(params && params[dyn.param] !== undefined ? params[dyn.param] : dyn.count ?? 2, 10);
+    if (!isFinite(n)) n = dyn.count ?? 2;
+    n = clamp(n, dyn.min ?? 1, dyn.max ?? 8);
+    const start = dyn.start ?? 1;
+    const ports = [];
+    for (let i = 0; i < n; i++) {
+      for (const [prefix, type] of dyn.outputs) {
+        const name = `${prefix}${i + start}`;
+        ports.push({ name, type, default: null, label: name });
+      }
+    }
+    return ports.concat(def.outputs);
+  }
+
+  _outPort(node, port) {
+    const def = node && this._blocks[node.type];
+    return def ? this._outputPorts(def, node.params).find((p) => p.name === port) : undefined;
+  }
+
   // ------------------------------------------------------------------ pages
   _ensurePages() {
     const p = this._prog;
@@ -1645,7 +1669,8 @@ class FbdLogicPanel extends HTMLElement {
   _pruneLinks(node) {
     const def = this._blocks[node.type];
     const names = new Set(this._inputPorts(def, node.params).map((p) => p.name));
-    this._prog.links = this._prog.links.filter((l) => l.to !== node.id || names.has(l.to_port));
+    const outs = new Set(this._outputPorts(def, node.params).map((p) => p.name));
+    this._prog.links = this._prog.links.filter((l) => (l.to !== node.id || names.has(l.to_port)) && (l.from !== node.id || outs.has(l.from_port)));
   }
 
   // ------------------------------------------------------------------ geometry
@@ -1660,7 +1685,7 @@ class FbdLogicPanel extends HTMLElement {
       return { x, y, w, h: Math.max(30, lines.length * 14 + 12), ins: [], outs: [], def, lines };
     }
     const ins = this._inputPorts(def, node.params);
-    const outs = def.outputs;
+    const outs = this._outputPorts(def, node.params);
     const info = this._info(node, def);
     const infoH = info !== null ? INFO : 0;
     const rows = Math.max(ins.length, outs.length, 1);
@@ -2753,11 +2778,12 @@ class FbdLogicPanel extends HTMLElement {
         }
       }
     }
-    if (def.outputs.length) {
+    const outPorts = this._outputPorts(def, node.params);
+    if (outPorts.length) {
       const live = this._online && !!this._livePid && !this._dirtyNode(nid);
       h.push(`<h4>${t("Utganger")}${this._online ? " (live)" : ""}</h4>`);
       const sn = this._snap && this._snap.nodes && this._snap.nodes[nid];
-      for (const p of def.outputs) {
+      for (const p of outPorts) {
         const forced = !!(sn && sn.f && Object.prototype.hasOwnProperty.call(sn.f, p.name));
         const sig = `${this._fullId(nid)}|${p.name}`;
         let extra = "";
@@ -2992,7 +3018,7 @@ class FbdLogicPanel extends HTMLElement {
       await this._ws({ type: "fbd_logic/force", program_id: pid, node_id: this._fullId(nid), port, value });
       this._propsRefresh = true;
       const node = this._node(nid);
-      const out = node && this._blocks[node.type] && this._blocks[node.type].outputs.find((p) => p.name === port);
+      const out = this._outPort(node, port);
       const lbl = out ? out.label : port;
       this._toast(value === null ? t("Tvangsstyringen av «{port}» er frigitt", { port: lbl }) : t("Utgangen «{port}» er tvunget til {value}", { port: lbl, value: fmt(value) }));
     } catch (err) {
@@ -3093,8 +3119,8 @@ class FbdLogicPanel extends HTMLElement {
     const node = this._node(nid);
     if (!node) return t("{sig} (slettet)", { sig: `${nid}.${port}` });
     const def = this._blocks[node.type];
-    const out = def && def.outputs.find((p) => p.name === port);
-    const nlabel = node.label || this._info(node, def || {}) || def?.title || node.type;
+    const out = this._outPort(node, port);
+    const nlabel =node.label || this._info(node, def || {}) || def?.title || node.type;
     return `${nlabel}.${out ? out.label : port}`;
   }
 
@@ -3106,8 +3132,8 @@ class FbdLogicPanel extends HTMLElement {
     const node = this._node(nid);
     if (!node) return trunc(full, max);
     const def = this._blocks[node.type];
-    const out = def && def.outputs.find((p) => p.name === port);
-    const plabel = out ? out.label : port;
+    const out = this._outPort(node, port);
+    const plabel =out ? out.label : port;
     const named = node.label || this._info(node, def || {});
     const head = named || def?.symbol || def?.title || node.type;
     return `${trunc(head, Math.max(3, max - plabel.length - 1))}.${plabel}`;
@@ -3326,9 +3352,7 @@ class FbdLogicPanel extends HTMLElement {
     const name = await this._prompt(t("Navn på den nye makroen"), t("Ny makro"));
     if (!name) return;
     const outType = (nid, port) => {
-      const n = this._node(nid);
-      const def = n && this._blocks[n.type];
-      const p = def && def.outputs.find((x) => x.name === port);
+      const p = this._outPort(this._node(nid), port);
       return p ? p.type : "any";
     };
     const internal = this._prog.links.filter((l) => ids.has(l.from) && ids.has(l.to));

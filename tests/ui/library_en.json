@@ -1967,6 +1967,104 @@
    "width": 110
   },
   {
+   "type": "astro",
+   "category": "time",
+   "title": "Astro clock",
+   "symbol": "ASTRO",
+   "description": "The sun's elevation and direction, and whether it is day, from the location in Home Assistant (or your own latitude/longitude). 'day' is on while the sun is above the chosen horizon, and also works with midnight sun and polar night. 'rise' and 'set' are today's sunrise and sunset in minutes after midnight (like the clock's daymin), -1 if the sun does not rise or set today. Azimuth is degrees from north, clockwise (90 = east, 180 = south). For an offset, e.g. lights 30 min after sunset: choose twilight, or use TON/TOF after the block.",
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "day",
+     "type": "bool",
+     "default": null,
+     "label": "day"
+    },
+    {
+     "name": "elev",
+     "type": "num",
+     "default": null,
+     "label": "elevation"
+    },
+    {
+     "name": "azi",
+     "type": "num",
+     "default": null,
+     "label": "azimuth"
+    },
+    {
+     "name": "rise",
+     "type": "num",
+     "default": null,
+     "label": "rise"
+    },
+    {
+     "name": "set",
+     "type": "num",
+     "default": null,
+     "label": "set"
+    }
+   ],
+   "params": [
+    {
+     "name": "horizon",
+     "type": "select",
+     "default": "sun",
+     "label": "Day while the sun is above",
+     "options": [
+      {
+       "value": "sun",
+       "label": "The horizon (sunrise/sunset)"
+      },
+      {
+       "value": "civil",
+       "label": "Civil twilight (−6°)"
+      },
+      {
+       "value": "nautical",
+       "label": "Nautical twilight (−12°)"
+      },
+      {
+       "value": "custom",
+       "label": "Custom elevation"
+      }
+     ]
+    },
+    {
+     "name": "elev",
+     "type": "number",
+     "default": 0,
+     "label": "Sun elevation (°)",
+     "min": -18,
+     "max": 60,
+     "step": 0.5,
+     "show_if": {
+      "param": "horizon",
+      "in": [
+       "custom"
+      ]
+     }
+    },
+    {
+     "name": "lat",
+     "type": "text",
+     "default": "",
+     "label": "Latitude",
+     "help": "Empty = the location in Home Assistant"
+    },
+    {
+     "name": "lon",
+     "type": "text",
+     "default": "",
+     "label": "Longitude",
+     "help": "Empty = the location in Home Assistant"
+    }
+   ],
+   "dynamic": null,
+   "ha": null,
+   "width": 110
+  },
+  {
    "type": "runtime",
    "category": "time",
    "title": "Run time",
@@ -2288,6 +2386,92 @@
    ],
    "params": [],
    "dynamic": null,
+   "ha": null,
+   "width": 120
+  },
+  {
+   "type": "loadshare",
+   "category": "control",
+   "title": "Load balancing",
+   "symbol": "LB",
+   "description": "Divides the available current (A) between several chargers. Every active charger first gets the minimum current, highest priority first; a charger that cannot get the minimum gets 0 (paused). The rest goes to the highest priority first and is shared evenly between chargers with the same priority, up to each charger's max. The same priority on all gives an even share. 'rest' is current left unused, 'limited' is on when an active charger gets less than its max.",
+   "inputs": [
+    {
+     "name": "avail",
+     "type": "num",
+     "default": 0,
+     "label": "available"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "rest",
+     "type": "num",
+     "default": null,
+     "label": "rest"
+    },
+    {
+     "name": "lim",
+     "type": "bool",
+     "default": null,
+     "label": "limited"
+    }
+   ],
+   "params": [
+    {
+     "name": "n",
+     "type": "number",
+     "default": 2,
+     "label": "Number of chargers",
+     "min": 1,
+     "max": 8,
+     "step": 1
+    },
+    {
+     "name": "min_current",
+     "type": "number",
+     "default": 6,
+     "label": "Minimum current per charger (A)",
+     "min": 0,
+     "step": 1
+    },
+    {
+     "name": "whole",
+     "type": "bool",
+     "default": true,
+     "label": "Whole amperes"
+    }
+   ],
+   "dynamic": {
+    "param": "n",
+    "pairs": [
+     [
+      "en",
+      "bool",
+      true
+     ],
+     [
+      "prio",
+      "num",
+      1.0
+     ],
+     [
+      "max",
+      "num",
+      32.0
+     ]
+    ],
+    "after": true,
+    "count": 2,
+    "min": 1,
+    "max": 8,
+    "outputs": [
+     [
+      "out",
+      "num"
+     ]
+    ]
+   },
    "ha": null,
    "width": 120
   },

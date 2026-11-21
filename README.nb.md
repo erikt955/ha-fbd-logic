@@ -8,7 +8,7 @@ Tegn logikk som **funksjonsblokkdiagram (FBD)** i et eget sidepanel i Home Assis
 
 ## Funksjoner
 
-- **62 blokker**: logikk, sammenligning, matematikk, tid, ukeplan, PID-regulator, rampe, filter, HA-entiteter, KNX og Modbus.
+- **64 blokker**: logikk, sammenligning, matematikk, tid, ukeplan, astrour, PID-regulator, rampe, filter, lastbalansering for elbilladere, HA-entiteter, KNX og Modbus.
 - **Live-verdier** på alle tråder og utganger, med **tvangsstyring** og **trend** for inntil 8 signaler.
 - **Sider**, **koblingspunkter** mellom sider og **makroer** (egne blokker satt sammen av andre blokker).
 - **Skann ved endring**: programmet reagerer under ett millisekund etter at HA har fått endringen, uansett syklustid.
@@ -93,8 +93,8 @@ Med Online på har hver utgang i egenskapspanelet knappen **Tving**:
 | Logikk | AND, OR, XOR (2–8 innganger), NOT, SR, RS, R_TRIG, F_TRIG, impulsrelé |
 | Sammenligning | >, ≥, <, ≤, =, ≠, hysterese, innenfor område, velger (SEL), multiplekser (MUX, 2–16 innganger), prioritetsvelger, tekst lik |
 | Matematikk | +, −, ×, ÷, MIN, MAX, AVG, ABS, LIMIT, lineær skalering, avrunding, formel, hent bit |
-| Tid | TON, TOF, TP, pulsgenerator, klokke, driftstid, teller, ukeplan |
-| Regulering | PID-regulator, rampe, endringsbegrenser (egen rate opp/ned), sample & hold (nyeste verdi høyst én gang per intervall), lavpassfilter (PT1) |
+| Tid | TON, TOF, TP, pulsgenerator, klokke, astrour (soloppgang/-nedgang, solhøyde og asimut), driftstid, teller, ukeplan |
+| Regulering | PID-regulator, rampe, endringsbegrenser (egen rate opp/ned), sample & hold (nyeste verdi høyst én gang per intervall), lavpassfilter (PT1), lastbalansering (fordel strøm mellom ladere etter prioritet) |
 | KNX / Modbus | KNX send, KNX lytt, Modbus skriv |
 | Annet | Konstant (tall / av-på), kommentar, koblingspunkt (sender/mottaker) |
 | Makroer | Dine egne makroblokker |
@@ -132,6 +132,14 @@ En generell PID-regulator for alle slags prosesser: temperatur, trykk, fukt, CO�
 - Integratoren lagres og overlever både lagring av programmet og omstart av HA.
 - Et sprang i PV flytter utgangen med Kp × ΔPV med en gang (P-leddet), og I-leddet flytter den gradvis etterpå. Hopper utgangen for mye for hvert lille trinn fra en sensor, kan du senke Kp, bruke dødbånd, filtrere PV med PT1 eller begrense utgangen med en rampe.
 - HA er ikke et sanntidssystem, og mange sensorer oppdateres bare hvert sekund eller sjeldnere. Regulatoren passer derfor ikke til sløyfer som må reagere på millisekunder, som turtallsregulering av motorer.
+
+### Astrour
+
+`dag` er på mens solen står over valgt horisont: selve horisonten (soloppgang/-nedgang), borgerlig skumring (−6°), nautisk skumring (−12°) eller en egen solhøyde. Den regnes ut fra solhøyden, så den virker også ved midnattssol og mørketid. `opp` og `ned` er dagens tider i minutter etter midnatt (−1 når solen ikke går opp eller ned). `solhøyde` og `asimut` (grader fra nord) passer til solskjerming. For lys 30 minutter etter solnedgang: bruk borgerlig skumring eller en utkoblingsforsinkelse (TOF) på `dag`.
+
+### Lastbalansering
+
+Gir hver lader sin del av tilgjengelig strøm, typisk `tilgjengelig = (maks effekt − annet forbruk) / spenning`. Koble `enN` til «lader N lader eller venter», sett `prioN` (høyere = viktigere) og `maxN` (laderens eller bilens grense), og send `outN` til laderen, for eksempel via Sample & hold. Med lik prioritet deles strømmen likt; når det kniper, beholder den viktigste laderen mest, og en lader som ikke får minstestrømmen settes på pause. Ladere i samme Zaptec-installasjon balanseres allerede av Zaptec; blokken er for ladere i hver sin installasjon eller av ulike merker.
 
 ### KNX og Modbus
 

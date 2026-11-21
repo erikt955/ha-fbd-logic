@@ -57,7 +57,7 @@ try:
         root = page.locator("fbd-logic-panel")
         page.wait_for_selector("fbd-logic-panel >> .palette .item")
         n_items = root.locator(".palette .item").count()
-        check(n_items == 60, f"palette shows all blocks except macro pins ({n_items})")
+        check(n_items == 62, f"palette shows all blocks except macro pins ({n_items})")
         check(root.locator('.palette .item[data-type="macro_in"]').count() == 0, "macro pins hidden outside macro mode")
         fit = page.evaluate(
             "() => [window.__panel.getBoundingClientRect().height, innerHeight, document.scrollingElement.scrollHeight]"
@@ -602,6 +602,32 @@ try:
         page.wait_for_timeout(150)
         check(page.evaluate("() => 'mx' in window.__panel._prog.links.find(l => l.id === 'w1')") is False, "double-click resets automatic routing")
         page.screenshot(path=str(OUT / "17_wires.png"))
+
+        # ------------------------------------------------------------ dynamic outputs
+        print("18. Load balancing: outputs follow the number of chargers")
+        page.evaluate("() => { const p = window.__panel; p._prog.nodes = []; p._prog.links = []; p._sel = new Set(); p._render(); }")
+        root.locator('.palette .item[data-type="loadshare"]').click()
+        page.wait_for_timeout(150)
+        lb = page.evaluate("() => [...window.__panel._sel][0]")
+        outs = lambda: root.locator(f'[data-port^="{lb}|out|"]').count()  # noqa: E731
+        check(outs() == 4, f"two chargers: out1, out2, rest, limited ({outs()})")
+        n_field = root.locator('.props input[data-f="param:n"]')
+        n_field.fill("3")
+        n_field.dispatch_event("change")
+        page.wait_for_timeout(150)
+        check(outs() == 5 and root.locator(f'[data-port="{lb}|out|out3"]').count() == 1, f"three chargers add out3 ({outs()})")
+        page.evaluate(
+            f"""() => {{ const p = window.__panel;
+            p._prog.nodes.push({{ id: 'k9', type: 'abs', x: 600, y: 100, params: {{}}, consts: {{}}, page: p._page }});
+            p._prog.links.push({{ id: 'w9', from: '{lb}', from_port: 'out3', to: 'k9', to_port: 'in' }}); p._render(); }}"""
+        )
+        n_field = root.locator('.props input[data-f="param:n"]')
+        n_field.fill("2")
+        n_field.dispatch_event("change")
+        page.wait_for_timeout(150)
+        check(outs() == 4, f"back to two chargers removes out3 ({outs()})")
+        check(page.evaluate("() => window.__panel._prog.links.some(l => l.id === 'w9')") is False, "the wire from the removed output is deleted")
+        page.screenshot(path=str(OUT / "18_loadshare.png"))
 
         browser.close()
 finally:

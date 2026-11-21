@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.0
+
+- New block **Astro clock** (`ASTRO`, Time): sun elevation and azimuth, `day` while the sun is above the horizon, civil or nautical twilight or a custom elevation, and today's sunrise and sunset (minutes after midnight). Uses the location in Home Assistant, or your own latitude/longitude. Works with midnight sun and polar night; the times agree with the `astral` library within a minute.
+- New block **Load balancing** (`LB`, Control): divides the available current between 1–8 chargers. Every active charger first gets the minimum (6 A by default), highest priority first, and a charger that cannot get it is paused (0 A). The rest goes to the highest priority first and is shared evenly within a priority, up to each charger's max. Outputs per charger, plus unused current and a `limited` flag.
+- Blocks can have a variable number of outputs that follows a setting (used by Load balancing). Wires from outputs that disappear are removed.
+
 ## 0.5.0
 
 - New block **Sample & hold** (`S&H`, Control): holds the value and lets the newest value through at most once per interval, without a ramp – for example a PID output that should reach an actuator at most every 10 s. A change after a quiet period passes at once, the output always catches up with an input that has stopped changing, and changes smaller than the deadband are held. Works for numbers, on/off and text, has an `updated` pulse and is kept over a restart.

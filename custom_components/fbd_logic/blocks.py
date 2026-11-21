@@ -18,6 +18,7 @@ import copy
 import math
 import struct
 from dataclasses import dataclass, field
+from datetime import datetime
 from typing import Any, Callable
 
 from .expr import ExpressionError, compile_expression
@@ -202,7 +203,8 @@ class BlockDef:
     params: list[Param] = field(default_factory=list)
     fn: BlockFn | None = None
     # Variable input count: {"param", "prefix" | "names" | "pairs", "type", "default",
-    # "min", "max", "start" (first index, default 1), "after" (after fixed inputs)}
+    # "min", "max", "start" (first index, default 1), "after" (after fixed inputs),
+    # "outputs" ([[prefix, type], …]: one output each per index, before the fixed outputs)}
     dynamic: dict[str, Any] | None = None
     retain: tuple[str, ...] = ()
     ha: str | None = None  # entity_in | entity_out | setpoint | toggle | publish
@@ -240,6 +242,18 @@ class BlockDef:
         if dyn.get("after"):
             return list(self.inputs) + ports
         return ports + list(self.inputs)
+
+    def output_ports(self, params: dict[str, Any]) -> list[Port]:
+        dyn = self.dynamic
+        if not dyn or not dyn.get("outputs"):
+            return list(self.outputs)
+        start = int(dyn.get("start", 1))
+        ports = [
+            Port(f"{prefix}{idx + start}", ptype)
+            for idx in range(self.dynamic_count(params))
+            for prefix, ptype in dyn["outputs"]
+        ]
+        return ports + list(self.outputs)
 
     def to_json(self) -> dict[str, Any]:
         return {
@@ -1354,6 +1368,175 @@ register(
 )
 
 
+# --------------------------------------------------------------------------
+# Astro clock (NOAA solar equations, accurate to about a minute)
+# --------------------------------------------------------------------------
+HORIZONS = {"sun": -0.833, "civil": -6.0, "nautical": -12.0}
+
+
+def _julian_day(y: int, m: int, d: int) -> float:
+    """Julian day at 00:00 UTC of a calendar date."""
+    if m <= 2:
+        y -= 1
+        m += 12
+    a = y // 100
+    b = 2 - a + a // 4
+    return math.floor(365.25 * (y + 4716)) + math.floor(30.6001 * (m + 1)) + d + b - 1524.5
+
+
+def _sun_coords(jd: float) -> tuple[float, float]:
+    """Declination (degrees) and equation of time (minutes) at a Julian day."""
+    jc = (jd - 2451545.0) / 36525.0
+    l0 = (280.46646 + jc * (36000.76983 + jc * 0.0003032)) % 360
+    mr = math.radians(357.52911 + jc * (35999.05029 - 0.0001537 * jc))
+    e = 0.016708634 - jc * (0.000042037 + 0.0000001267 * jc)
+    c = (
+        math.sin(mr) * (1.914602 - jc * (0.004817 + 0.000014 * jc))
+        + math.sin(2 * mr) * (0.019993 - 0.000101 * jc)
+        + math.sin(3 * mr) * 0.000289
+    )
+    omega = math.radians(125.04 - 1934.136 * jc)
+    app_long = math.radians(l0 + c - 0.00569 - 0.00478 * math.sin(omega))
+    obliq = 23 + (26 + (21.448 - jc * (46.815 + jc * (0.00059 - jc * 0.001813))) / 60) / 60
+    ob = math.radians(obliq + 0.00256 * math.cos(omega))
+    decl = math.degrees(math.asin(math.sin(ob) * math.sin(app_long)))
+    y = math.tan(ob / 2) ** 2
+    l0r = math.radians(l0)
+    eqt = 4 * math.degrees(
+        y * math.sin(2 * l0r)
+        - 2 * e * math.sin(mr)
+        + 4 * e * y * math.sin(mr) * math.cos(2 * l0r)
+        - 0.5 * y * y * math.sin(4 * l0r)
+        - 1.25 * e * e * math.sin(2 * mr)
+    )
+    return decl, eqt
+
+
+def sun_position(utc: datetime, lat: float, lon: float) -> tuple[float, float]:
+    """Sun elevation and azimuth in degrees (azimuth from north, clockwise; no refraction)."""
+    minutes = utc.hour * 60 + utc.minute + utc.second / 60 + utc.microsecond / 6e7
+    decl, eqt = _sun_coords(_julian_day(utc.year, utc.month, utc.day) + minutes / 1440)
+    ha = ((minutes + eqt + 4 * lon) % 1440) / 4 - 180
+    latr, dr = math.radians(lat), math.radians(decl)
+    cos_z = math.sin(latr) * math.sin(dr) + math.cos(latr) * math.cos(dr) * math.cos(math.radians(ha))
+    zen = math.acos(max(-1.0, min(1.0, cos_z)))
+    denom = math.cos(latr) * math.sin(zen)
+    if abs(denom) < 1e-9:
+        azimuth = 180.0
+    else:
+        a = math.degrees(math.acos(max(-1.0, min(1.0, (math.sin(latr) * math.cos(zen) - math.sin(dr)) / denom))))
+        azimuth = (a + 180) % 360 if ha > 0 else (540 - a) % 360
+    return 90 - math.degrees(zen), azimuth
+
+
+def sun_events(y: int, m: int, d: int, lat: float, lon: float, h0: float) -> tuple[float | None, float | None]:
+    """Sunrise and sunset in UTC minutes after 00:00 UTC of the date, None if the sun
+    does not cross the horizon h0 (degrees) that day (midnight sun or polar night)."""
+    jd0 = _julian_day(y, m, d)
+    latr = math.radians(lat)
+
+    def event(sign: int) -> float | None:
+        t = 720 - 4 * lon  # first guess: solar noon
+        for _ in range(4):
+            decl, eqt = _sun_coords(jd0 + t / 1440)
+            dr = math.radians(decl)
+            cos_h = (math.sin(math.radians(h0)) - math.sin(latr) * math.sin(dr)) / (math.cos(latr) * math.cos(dr))
+            if not -1 <= cos_h <= 1:
+                return None
+            t = 720 - 4 * lon - eqt + sign * 4 * math.degrees(math.acos(cos_h))
+        return t
+
+    return event(-1), event(1)
+
+
+def _coord(value: Any) -> float | None:
+    text = str(value if value is not None else "").strip().replace(",", ".")
+    if not text:
+        return None
+    try:
+        return float(text)
+    except ValueError:
+        return None
+
+
+def _astro(ctx, i, p, s):
+    lat, lon = _coord(p.get("lat")), _coord(p.get("lon"))
+    if lat is None or lon is None:
+        loc_fn = getattr(ctx.io, "location", None)
+        home = loc_fn() if loc_fn else None
+        if home is None:
+            raise RuntimeError(tr("Mangler posisjon: fyll inn breddegrad og lengdegrad"))
+        lat = home[0] if lat is None else lat
+        lon = home[1] if lon is None else lon
+    if not (-90 < lat < 90 and -180 <= lon <= 180):
+        raise RuntimeError(tr("Ugyldig posisjon"))
+    mode = p.get("horizon", "sun")
+    h0 = HORIZONS.get(mode, to_num(p.get("elev", 0)) if mode == "custom" else -0.833)
+    local = ctx.local
+    offset = local.utcoffset()
+    utc = (local - offset).replace(tzinfo=None) if offset is not None else local
+    elev, azimuth = sun_position(utc, lat, lon)
+    key = (local.date(), lat, lon, h0)
+    if s.get("_key") != key:  # rise and set: once per day and setting
+        s["_key"] = key
+        off_min = offset.total_seconds() / 60 if offset is not None else 0.0
+        rise, set_ = sun_events(local.year, local.month, local.day, lat, lon, h0)
+        s["_ev"] = tuple(-1.0 if t is None else round((t + off_min) % 1440, 1) for t in (rise, set_))
+    rise_min, set_min = s["_ev"]
+    return {
+        "day": elev > h0,
+        "elev": round(elev, 2),
+        "azi": round(azimuth, 1),
+        "rise": rise_min,
+        "set": set_min,
+    }
+
+
+register(
+    BlockDef(
+        type="astro",
+        category="time",
+        title="Astrour",
+        symbol="ASTRO",
+        description=(
+            "Solens høyde og retning, og om det er dag, ut fra posisjonen i Home Assistant "
+            "(eller egen breddegrad/lengdegrad). 'dag' er på mens solen står over valgt "
+            "horisont, og virker også ved midnattssol og mørketid. 'opp' og 'ned' er dagens "
+            "soloppgang og solnedgang i minutter etter midnatt (som klokkens dagmin), -1 hvis "
+            "solen ikke går opp eller ned i dag. Asimut er grader fra nord med klokken "
+            "(90 = øst, 180 = sør). For forskyvning, f.eks. lys 30 min etter solnedgang: "
+            "velg skumring, eller bruk TON/TOF etter blokken."
+        ),
+        outputs=[
+            Port("day", BOOL, label="dag"),
+            Port("elev", NUM, label="solhøyde"),
+            Port("azi", NUM, label="asimut"),
+            Port("rise", NUM, label="opp"),
+            Port("set", NUM, label="ned"),
+        ],
+        params=[
+            Param(
+                "horizon",
+                "select",
+                "sun",
+                "Dag er når solen står over",
+                options=(
+                    ("sun", "Horisonten (soloppgang/-nedgang)"),
+                    ("civil", "Borgerlig skumring (−6°)"),
+                    ("nautical", "Nautisk skumring (−12°)"),
+                    ("custom", "Egen solhøyde"),
+                ),
+            ),
+            Param("elev", "number", 0, "Solhøyde (°)", min=-18, max=60, step=0.5, show_if=("horizon", ("custom",))),
+            Param("lat", "text", "", "Breddegrad", help="Tom = posisjonen i Home Assistant"),
+            Param("lon", "text", "", "Lengdegrad", help="Tom = posisjonen i Home Assistant"),
+        ],
+        fn=_astro,
+        width=110,
+    )
+)
+
+
 def _runtime(ctx, i, p, s):
     if i["reset"]:
         s["sec"] = 0.0
@@ -1647,6 +1830,104 @@ register(
         outputs=[Port("out", ANY), Port("upd", BOOL, label="oppdatert")],
         fn=_sample_hold,
         retain=("out",),
+        width=120,
+    )
+)
+
+
+def share_current(
+    avail: float, chargers: list[tuple[bool, float, float]], min_a: float, whole: bool
+) -> tuple[list[float], float]:
+    """Divide the available current between chargers given as (active, priority, max).
+
+    Every active charger first gets its minimum, highest priority first; a charger that
+    cannot get the minimum gets 0 (paused). The rest goes to the highest priority first,
+    shared evenly between chargers with the same priority, up to each charger's max.
+    Returns (current per charger, current left over).
+    """
+    eps = 1e-9
+    count = len(chargers)
+    alloc = [0.0] * count
+    min_a = max(0.0, min_a)
+    remaining = max(0.0, math.floor(avail + eps) if whole else avail)
+    cap = [max(0.0, math.floor(mx + eps) if whole else mx) for _on, _pr, mx in chargers]
+    prio = [pr for _on, pr, _mx in chargers]
+    cand = [k for k, (on, _pr, _mx) in enumerate(chargers) if on and cap[k] > 0 and cap[k] >= min_a]
+    granted = []
+    for k in sorted(cand, key=lambda k: (-prio[k], k)):
+        if min_a <= remaining + eps:
+            alloc[k] = min_a
+            remaining -= min_a
+            granted.append(k)
+    for level in sorted({prio[k] for k in granted}, reverse=True):
+        group = [k for k in granted if prio[k] == level]
+        if whole:
+            while remaining >= 1 - eps:
+                room = [k for k in group if alloc[k] + 1 <= cap[k] + eps]
+                if not room:
+                    break
+                k = min(room, key=lambda k: (alloc[k], k))  # the one with least so far
+                alloc[k] += 1
+                remaining -= 1
+        else:
+            while remaining > eps:
+                room = [k for k in group if alloc[k] < cap[k] - eps]
+                if not room:
+                    break
+                share = remaining / len(room)
+                for k in room:
+                    add = min(share, cap[k] - alloc[k])
+                    alloc[k] += add
+                    remaining -= add
+    return alloc, max(0.0, remaining)
+
+
+def _loadshare(ctx, i, p, s):
+    chargers = []
+    idx = 1
+    while f"en{idx}" in i:
+        chargers.append((bool(i[f"en{idx}"]), to_num(i[f"prio{idx}"]), to_num(i[f"max{idx}"])))
+        idx += 1
+    alloc, rest = share_current(
+        to_num(i["avail"]), chargers, to_num(p.get("min_current", 6)), bool(p.get("whole", True))
+    )
+    out: dict[str, Any] = {f"out{k + 1}": round(a, 3) for k, a in enumerate(alloc)}
+    out["rest"] = round(rest, 3)
+    out["lim"] = any(on and alloc[k] < mx - 1e-6 for k, (on, _pr, mx) in enumerate(chargers))
+    return out
+
+
+register(
+    BlockDef(
+        type="loadshare",
+        category="control",
+        title="Lastbalansering",
+        symbol="LB",
+        description=(
+            "Fordeler tilgjengelig strøm (A) mellom flere ladere. Hver aktive lader får først "
+            "minstestrømmen, høyest prioritet først; en lader som ikke får minstestrømmen får 0 "
+            "(pause). Resten går til høyest prioritet først og deles likt mellom ladere med samme "
+            "prioritet, opp til laderens maks. Lik prioritet på alle gir lik fordeling. "
+            "'rest' er strøm som ikke ble brukt, 'begrenset' er på når en aktiv lader får mindre "
+            "enn maks."
+        ),
+        inputs=[Port("avail", NUM, 0, "tilgjengelig")],
+        outputs=[Port("rest", NUM), Port("lim", BOOL, label="begrenset")],
+        params=[
+            Param("n", "number", 2, "Antall ladere", min=1, max=8, step=1),
+            Param("min_current", "number", 6, "Minste strøm per lader (A)", min=0, step=1),
+            Param("whole", "bool", True, "Hele ampere"),
+        ],
+        dynamic={
+            "param": "n",
+            "pairs": [["en", BOOL, True], ["prio", NUM, 1.0], ["max", NUM, 32.0]],
+            "after": True,
+            "count": 2,
+            "min": 1,
+            "max": 8,
+            "outputs": [["out", NUM]],
+        },
+        fn=_loadshare,
         width=120,
     )
 )
